@@ -166,5 +166,5 @@ No lease holds a database transaction or connection open during HTTP. Constraint
 
 ## Migration and Data Lifecycle
 
-Stage 2 will create the first domain migration; Stage 3 will add provider/receipt fields and constraints. Add SQL checks/indexes in reviewed migrations when needed. Test migration application against empty PostgreSQL, FK restriction, concurrent insertion, null uniqueness, and rollback. Keep schema changes forward-oriented; do not edit applied migrations. No migrations or database configuration files are created in this documentation task.
+Stage 2 will create the first domain migration; Stage 3 will add provider/receipt fields and constraints. Add SQL checks/indexes in reviewed migrations when needed. Test migration application against empty PostgreSQL, FK restriction, concurrent insertion, null uniqueness, and rollback. Keep schema changes forward-oriented; do not edit applied migrations. Stage 1 establishes Prisma configuration and an empty generated client; there are no domain models or migrations yet.
 

@@ -1,0 +1,40 @@
+{
+  "name": "payment-processing-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=24.11 <25",
+    "npm": ">=11 <12"
+  },
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "setup:env": "node infra/setup-env.mjs",
+    "dev": "docker compose --env-file .env -f infra/compose.yaml up --build --watch",
+    "dev:web": "npm run dev --workspace @simulator/web",
+    "dev:api": "npm run dev --workspace @simulator/api",
+    "infra:up": "docker compose --env-file .env -f infra/compose.yaml up --build --wait",
+    "infra:down": "docker compose --env-file .env -f infra/compose.yaml down",
+    "infra:check": "docker compose --env-file .env -f infra/compose.yaml config --quiet",
+    "db:generate": "npm run db:generate --workspace @simulator/api",
+    "db:validate": "npm run db:validate --workspace @simulator/api",
+    "build": "npm run build --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "lint": "eslint apps --max-warnings 0",
+    "format": "prettier --write package.json eslint.config.mjs .prettierrc.json 'apps/**/*.{ts,tsx,json,cjs,mjs,css,yaml}' 'infra/**/*.{mjs,yaml}'",
+    "format:check": "prettier --check package.json eslint.config.mjs .prettierrc.json 'apps/**/*.{ts,tsx,json,cjs,mjs,css,yaml}' 'infra/**/*.{mjs,yaml}'",
+    "test": "npm run test --workspace @simulator/api",
+    "test:integration": "npm run test:integration --workspace @simulator/api"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "eslint": "10.15.0",
+    "@next/eslint-plugin-next": "16.4.6",
+    "prettier": "3.10.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.73.0"
+  }
+}

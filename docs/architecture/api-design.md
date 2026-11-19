@@ -2,7 +2,7 @@
 
 ## Conventions and Shared Schemas
 
-Backend base path: `/api/v1`. Planned local backend origin: `http://localhost:3001`; the browser uses the Next.js same-origin proxy on port 3000. Examples are **contract examples for future implementation**, not evidence that endpoints currently run. Use JSON with camelCase fields, UUID payment IDs, uppercase local status/currency, UTC ISO-8601 timestamps, and decimal strings for audit bigint IDs. Reject unknown body fields and duplicate singleton headers. Do not coerce monetary strings or floats into integers.
+Backend base path: `/api/v1`. Planned local backend origin: `http://localhost:3001`; the browser uses the Next.js same-origin proxy on port 3000. Payment examples remain **contract examples for future implementation**. Stage 1 implements only the two health endpoints; see its [verification evidence](../features/stages/01-project-setup.md#verification-evidence--2026-11-19). Use JSON with camelCase fields, UUID payment IDs, uppercase local status/currency, UTC ISO-8601 timestamps, and decimal strings for audit bigint IDs. Reject unknown body fields and duplicate singleton headers. Do not coerce monetary strings or floats into integers.
 
 Normal JSON requests use `Content-Type: application/json` and optional `X-Request-Id` (UUID; otherwise generate one). Responses echo a safe generated/validated `X-Request-Id`, use `Cache-Control: no-store`, and never include a stack trace. No authentication is required for the local demo payment endpoints; the loopback-only boundary in the [system overview](system-overview.md) is part of this contract. Browser-facing proxy requests must satisfy its Host/Origin policy.
 

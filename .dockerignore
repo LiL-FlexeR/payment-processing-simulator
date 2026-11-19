@@ -1,0 +1,20 @@
+# Only explicit build inputs enter the API build context.
+**
+!package.json
+!package-lock.json
+!apps/
+!apps/api/
+!apps/api/package.json
+!apps/api/tsconfig*.json
+!apps/api/nest-cli.json
+!apps/api/prisma.config.ts
+!apps/api/prisma/
+!apps/api/prisma/**
+!apps/api/src/
+!apps/api/src/**
+!apps/web/
+!apps/web/package.json
+apps/api/src/generated/
+**/.env*
+**/*.pem
+**/*.key

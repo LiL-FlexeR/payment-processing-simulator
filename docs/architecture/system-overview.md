@@ -32,7 +32,7 @@ Arrows indicate communication, not permission to import modules cyclically. The 
 
 ## Local Container Runtime
 
-The default local environment must run **the backend and PostgreSQL in Docker Compose from Stage 1**. Define the `api` and `db` services in the planned `infra/compose.yaml`; a development Dockerfile for the API belongs in Stage 1. Stage 5 hardens the runtime images and adds/verifies the frontend container rather than postponing backend containerization until then.
+The default local environment must run **the backend and PostgreSQL in Docker Compose from Stage 1**. Define the `api` and `db` services in `infra/compose.yaml`; a development Dockerfile for the API belongs in Stage 1. Stage 5 hardens the runtime images and adds/verifies the frontend container rather than postponing backend containerization until then.
 
 | Component | Development/runtime contract |
 | --- | --- |
@@ -103,7 +103,7 @@ All exceptions pass through a NestJS filter implementing the [API error schema](
 
 ## Configuration Contract
 
-Stage 1 will create environment examples with placeholders; no real values belong in Git.
+Stage 1 provides environment examples with placeholders and an opt-in generator for ignored local files; no real values belong in Git. Before Stage 3, provider calls are disabled and provider credentials are unnecessary; setting a provider or enabling simulations fails configuration validation.
 
 | Setting | Requirement |
 | --- | --- |

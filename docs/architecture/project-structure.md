@@ -1,6 +1,6 @@
 # Project Structure and Dependency Boundaries
 
-This document owns the planned source layout, dependency injection rules, component conventions and frontend API organization. These are implementation instructions; the source directories below are not created by this documentation task. Keep the five-stage order and [runtime contract](system-overview.md#local-container-runtime).
+This document owns the planned source layout, dependency injection rules, component conventions and frontend API organization. These are implementation instructions. Stage 1 establishes only Config, Database, Health and the frontend shell; the broader tree below remains the layout for later stages. Keep the five-stage order and [runtime contract](system-overview.md#local-container-runtime).
 
 ## Backend Layout
 
@@ -141,11 +141,21 @@ Every reusable or page-associated React component has a folder with an `index.ts
 
 Configure shadcn aliases to the chosen `src/components/ui` and shared utility locations. If the selected CLI generates a flat primitive file, move its implementation into that primitive's folder entry point, fix relative imports and remove the flat duplicate. Inspect future add/update diffs so the generator does not silently reintroduce a parallel implementation. This is a project convention layered on top of [shadcn alias configuration](https://ui.shadcn.com/docs/components-json).
 
+The current CLI's `info` command does not enumerate these nested `index.tsx` primitives. Inspect `src/components/ui/<name>/index.tsx` before adding/updating even when its component list is empty. Normalize generated helper imports to the existing `@/utils/cn` rather than introducing another class-merging implementation.
+
 Next.js special files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `route.ts`, and other framework-defined names) retain their required filenames. They can compose folder-based components. Do not replace a route's `page.tsx` with `page/index.tsx`. Page-local components can be colocated without defining additional pages/routes; follow [Next.js file conventions](https://nextjs.org/docs/app/getting-started/project-structure).
 
 Keep a page's components in `src/app/<page>/components` and its domain-only UI hooks in that page's `hooks` folder. Component-private hooks belong inside the component folder. Promote a hook to `src/hooks` only when unrelated consumers actually share it. API query/mutation hooks belong in `src/api/hooks/<module>`, not `src/hooks` or component files.
 
 Keep dependencies flowing from pages/components to API hooks and request functions. `src/api` must not import page/layout components. Shared components must not import a page's private implementation. Keep component-prop types local, domain API transport types with the API domain, and only genuinely cross-domain types in `src/types`. Avoid central component barrel files that eagerly re-export every component; a component's own `index.tsx` is its explicit entry point.
+
+### Styling Conventions
+
+Use shadcn/ui for available UI primitives and Tailwind utility classes in JSX for layout, spacing and responsive behavior. Keep semantic HTML for page landmarks and content structure; a footer does not require a special UI primitive. Use component variants for reusable visual treatments and the shared `cn()` helper for conditional/merged classes.
+
+Keep `src/app/globals.css` limited to Tailwind/reference imports, theme/semantic token mappings and base element styles. Do not add application-specific selectors such as `.shell-footer`, `.service-row` or `.payment-card`, or hide the same patterns behind global `@apply` rules. Extract repeated markup into a folder-based local/shared component when appropriate. If a future behavior genuinely needs CSS that utilities cannot express, keep it scoped to that component and document the reason.
+
+The supplied reference files remain unchanged. Reuse their values through semantic utilities or explicit CSS-variable utilities; note that the imported spacing names use normalized pixel values, so do not assume every numeric spacing token has Tailwind's default meaning. Shadcn source variants are adapted to the flat reference theme, named radii and accessible action sizes instead of overriding their appearance separately at every call site.
 
 ### HTTP and Query/Mutation Hooks
 

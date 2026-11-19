@@ -1,0 +1,86 @@
+@import 'tailwindcss';
+@import '../../../../docs/design/variables.css';
+@import '../../../../docs/design/theme.css';
+
+/* Application mapping; preserve the supplied exports. */
+:root {
+  color-scheme: light;
+  --background: var(--surface-canvas);
+  --foreground: var(--color-midnight-ink);
+  --primary: var(--color-indigo-ink);
+  --primary-foreground: var(--color-pure-white);
+  --primary-hover: var(--color-deep-violet);
+  --secondary: var(--surface-band);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface-band);
+  --muted-foreground: var(--color-steel);
+  --accent: var(--surface-lavender-card);
+  --accent-foreground: var(--foreground);
+  --card: var(--surface-canvas);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface-canvas);
+  --popover-foreground: var(--foreground);
+  --border: var(--color-frost);
+  --outline: var(--color-lavender-border);
+  --input: var(--color-slate);
+  --ring: var(--color-indigo-ink);
+  --radius: var(--radius-cards);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-outline: var(--outline);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-sohne-var);
+}
+
+@layer base {
+  body {
+    margin: 0;
+    min-block-size: 100dvh;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sohne-var);
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    letter-spacing: var(--tracking-body);
+    font-feature-settings:
+      'ss01' on,
+      'tnum' on;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--foreground);
+  }
+  a {
+    color: var(--primary);
+    text-underline-offset: 0.2em;
+  }
+  a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 4px;
+  }
+  h1,
+  h2 {
+    font-weight: var(--font-weight-light);
+    text-wrap: balance;
+  }
+}

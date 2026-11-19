@@ -1,8 +1,8 @@
 # Payment Processing Simulator
 
-A planned, test-mode payment application that demonstrates reliable backend engineering: payment lifecycles, Stripe integration, idempotent requests, database consistency, verified webhooks, and recovery from failures.
+A test-mode payment application in development that demonstrates reliable backend engineering: payment lifecycles, Stripe integration, idempotent requests, database consistency, verified webhooks, and recovery from failures.
 
-**Project status: design complete; implementation has not started.** This repository contains documentation and project-local Codex skills. Application behavior, application/infrastructure files, and development workflows described below are planned. No application setup scripts, running services, screenshots, deployed URLs, or application test results exist yet.
+**Project status: Stage 1 complete and acceptance-verified.** The npm workspace, NestJS health API, Next.js shell, and PostgreSQL development/test environments now exist. Payment behavior, provider integration, dashboard workflows and CI remain planned for Stages 2–5. No deployed environment exists.
 
 ## Problem Statement
 
@@ -35,7 +35,28 @@ The scenario controls will demonstrate successful and declined test payments, id
 | Testing | Jest for unit/integration tests, Supertest for API tests, Playwright for browser tests |
 | CI | GitHub Actions with a PostgreSQL service and credential-free deterministic tests |
 
-Stage 1 will select mutually supported stable package versions and pin them in the lockfile and a README version table. The Stripe SDK and an explicit stable Stripe API version will be recorded together in Stage 3. Version-specific official documentation takes precedence over old examples and optional skills.
+Stage 1 pins stable package versions in the manifests and the single root lockfile. The Stripe SDK and an explicit stable Stripe API version will be recorded together in Stage 3. Version-specific official documentation takes precedence over old examples and optional skills.
+
+## Selected Versions and Compatibility
+
+| Component | Exact selected/resolved version | Runtime/compatibility decision |
+| --- | --- | --- |
+| Node.js | 24.22.3 in `.nvmrc` and API image; host checks also exercised on 24.16.0 | Supported Node 24 LTS, repository floor 24.11, below 25 |
+| npm | 11.13.0 | Workspace package manager and API image; one root lockfile |
+| NestJS / Express adapter | 12.5.1 | ESM application, constructor DI; Nest CLI 12.0.13 |
+| Next.js | 16.4.6 | App Router under `apps/web/src/app`, native server-only health proxy |
+| React / React DOM | 19.3.1 | Within Next.js peer requirements |
+| TypeScript | 5.9.3 | Strict; API NodeNext, frontend bundler resolution |
+| Prisma CLI / Client / PostgreSQL adapter | 7.10.1 | `prisma-client` generator, explicit ESM output; `@prisma/adapter-pg` with `pg` 8.16.3 |
+| PostgreSQL | 17.9 | `postgres:17.9-bookworm`, named development volume, separate ephemeral test service |
+| Jest / ts-jest / Supertest | 30.5.2 / 29.4.15 / 7.2.2 | One unit/API runner; Jest ESM uses Node's experimental VM-module flag |
+| Tailwind CSS / PostCSS plugin | 4.3.5 | Supplied CSS variables and `@theme` exports imported directly |
+| shadcn primitives / Base UI | Button and Badge / `@base-ui/react` 1.9.0 | Official base-nova source adapted to the supplied theme and folder entry points |
+| UI class helpers | CVA 0.7.1, clsx 2.1.1, tailwind-merge 3.7.0 | Shared `cn()` recognizes the reference's custom typography roles |
+| ESLint / TypeScript ESLint / Prettier | 10.15.0 / 8.73.0 / 3.10.1 | Flat config, Next core web vitals plugin 16.4.6 |
+| Docker / Compose verification environment | CLI 29.9.3, engine 29.5.3 / Compose 5.1.4 | Compose 2.32+ required for Watch `initial_sync` |
+
+Prisma 8 is a release candidate, so this stable setup explicitly stays on supported Prisma 7 ([release status](https://www.prisma.io/docs/orm/release-status)). Use the [version 7 client guidance](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/generating-prisma-client); do not run an unpinned Prisma CLI or skills sync. The generated client is ignored and recreated with `npm run db:generate`. There are no domain models or migrations yet. Database connections are lazy so liveness remains available during an outage; readiness uses `SELECT 1`, with one-second connection, query and statement timeouts, and no domain-table dependency.
 
 ## High-Level Architecture
 
@@ -54,7 +75,7 @@ Payments, provider integration, and webhook processing will be modules in one AP
 
 See the [architecture index](docs/architecture/README.md) for the detailed design.
 
-## Planned Repository Structure
+## Repository Structure
 
 ```text
 payment-processing-simulator/
@@ -73,14 +94,14 @@ payment-processing-simulator/
 │   │   └── stages/          # Five implementation instructions
 │   ├── architecture/        # Domain, persistence, API and recovery contracts
 │   └── design/              # Supplied visual reference and design tokens
-├── package.json             # Future npm workspace definition
-├── package-lock.json        # Future pinned dependency graph
-└── .github/workflows/        # Future CI
+├── package.json             # npm workspace definition
+├── package-lock.json        # Pinned dependency graph
+└── .github/workflows/        # Planned in Stage 5; not created yet
 ```
 
-Only `README.md` and the `docs/` documents in this tree were created by the design task. The developer subsequently requested installation of the recommended and optional skills. `skills.md` remains absent; no catalog was created.
+Stage 1 creates the two applications and infrastructure. The workflow directory remains planned. `skills.md` remains absent; no catalog or additional optional skills were installed during Stage 1.
 
-The [source structure contract](docs/architecture/project-structure.md) defines DI boundaries, the backend's one-versus-many folder rule, provider adapters under `integrations`, page-local frontend components and API hooks, and component folders with `index.tsx` entry points. Both applications use a `src` directory; these source folders remain planned until implementation.
+The [source structure contract](docs/architecture/project-structure.md) defines DI boundaries, the backend's one-versus-many folder rule, provider adapters under `integrations`, page-local frontend components and API hooks, and component folders with `index.tsx` entry points. Both applications use a `src` directory. Only currently used infrastructure, health and shell folders are present.
 
 ## Local Codex Skills
 
@@ -100,19 +121,68 @@ These supplied files establish the dashboard's visual direction and shared token
 
 Status updates will come only from validated provider observations through the synchronization service. A browser callback, timeout, simulation request, or old webhook payload cannot directly set a payment status. See the complete [transition table and sequences](docs/architecture/payment-lifecycle.md).
 
-## Local Development Prerequisites
+## Local Development
 
-Future implementation requires Git, a supported Node.js LTS release with npm, Docker with Compose, and available local ports for the web app (3000), API (3001), and PostgreSQL (5432). Docker-published ports must bind to `127.0.0.1`. A Stripe test account or sandbox and Stripe CLI are required only for the separate provider smoke test and interview demonstration.
+Prerequisites: a supported Node 24 LTS release (the exact container/reference release is in `.nvmrc`), npm 11, Git, Docker and Compose 2.32+. Keep ports 3000, 3001, 5432 and the test-only 5433 free. API and database host publishing binds to `127.0.0.1`; Next.js also binds to loopback. Stripe credentials and global CLI installations are unnecessary for Stage 1.
 
-The default local backend environment will include separate `api` (NestJS) and `db` (PostgreSQL) Compose services from Stage 1, with source synchronization, health checks and persistent database storage. Next.js may run on the host during development; Stage 5 adds its container and verifies the full stack's runtime images. Redis is not a baseline dependency; if a concrete feature requires it, add a `redis` Compose service and document its purpose. See the [container runtime contract](docs/architecture/system-overview.md#local-container-runtime).
+From a clean checkout:
 
-No commands are offered as runnable project commands yet. Stage 1 must add and verify the real setup, migration, development, and test commands before documenting them here. No global tools or optional Codex skills need to be installed to follow the roadmap.
+```bash
+npm ci
+npm run setup:env
+npm run db:generate
+npm run infra:check
+npm run dev
+```
 
-## Planned Development Workflow
+In another terminal:
 
-Follow the [five-stage roadmap](docs/features/ROADMAP.md) in order. Each stage defines its prerequisites, concrete tasks, expected artifacts, tests, and completion conditions. Keep a stage unchecked until functionality and its acceptance criteria have been verified.
+```bash
+npm run dev:web
+```
 
-Stage 1 will establish environment examples, startup validation and the containerized backend/PostgreSQL development environment. Stage 2 will build the local domain without Stripe calls. Stage 3 will add the provider boundary and recovery rules. Stage 4 will expose these flows through the dashboard. Stage 5 will harden runtime images, add the frontend container and verify the complete application. Update contracts alongside each implemented change.
+Open [the frontend shell](http://localhost:3000). Its server reads the API's published loopback port and links to an allowlisted, same-origin readiness proxy. The shell is dynamic and reports actual process/database observations; it does not process payments. The API endpoints are [liveness](http://localhost:3001/api/v1/health/live) and [readiness](http://localhost:3001/api/v1/health/ready).
+
+`setup:env` creates ignored `.env`, `apps/api/.env`, `apps/api/.env.test` and `apps/web/.env.local` from committed placeholder examples, using a generated URL-safe random password and stable instance UUID. It refuses to overwrite existing files. Keep the instance UUID across normal restarts. For manual configuration, copy the corresponding examples and replace every placeholder; keep the root/API/test passwords consistent. These local files are excluded from Docker's build context.
+
+The API runs inside Docker and connects to `db:5432`. Host Prisma tools use `127.0.0.1:5432`; integration tests use the distinct `simulator_test` database on `127.0.0.1:5433`. `API_INTERNAL_ORIGIN` and `WEB_ORIGIN` are server-only Next.js settings; the proxy rejects untrusted Host/Origin values and allows only the two health GET routes. Provider calls and simulations are disabled before Stage 3.
+
+Compose waits for database health before starting the API. `npm run dev` enables Watch: source changes sync without replacing container dependencies; manifest, lockfile, Prisma, TypeScript and Docker configuration changes rebuild the image and run `npm ci` again. `npm run infra:up` starts/rebuilds the same services in the background without Watch. `npm run infra:down` stops/removes development containers while preserving the named database volume. Do not add `--volumes` when stopping normal development.
+
+The API development image runs as the Node user with init/signal forwarding, OpenSSL for Prisma tooling, and pinned Node/npm versions. Nest CLI runs with `--no-shell` so source reloads stop the application process directly. Stage 5 owns production image hardening and the frontend container. Redis is omitted because no current feature requires it.
+
+## Quality Checks and Test Database
+
+```bash
+npm run db:validate
+npm run format:check
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+For real-PostgreSQL health tests, start the isolated test service first:
+
+```bash
+docker compose --env-file .env -f infra/compose.test.yaml up -d --wait
+npm run test:integration
+docker compose --env-file .env -f infra/compose.test.yaml down
+```
+
+The test service uses tmpfs, not the development volume. The integration suite refuses a non-test database, non-loopback host or port other than 5433. It verifies readiness before domain migrations and the bounded unreachable-database response. Unit/API tests cover configuration validation, HTTP schemas/headers, query/body rejection, outages and safe error handling. Jest's VM-module warning is expected for the ESM runner.
+
+The dependency audit during the shell's shadcn/Tailwind refactor reported zero vulnerabilities. Existing dependency versions were preserved while adding the UI primitives' dependencies; no automatic major downgrade or unverified dependency override was applied. Stage 5 will revisit the full dependency/security review.
+
+## Design Integration
+
+The web shell imports `docs/design/variables.css` and the Tailwind v4 `theme.css` without changing either supplied file. Global CSS contains those imports, semantic theme mappings and base element styles. Shell/page layout uses Tailwind utilities in JSX, and shared controls use shadcn Button/Badge with local variants. Component source lives in folder-based `index.tsx` files; `components.json` records the official Base UI/nova registry setup and source aliases. Dashboard workflows and additional primitives remain Stage 4 work.
+
+The shell keeps the white canvas, navy text, small indigo actions, fine frost dividers, flat surfaces, 4px component radii and tabular numerals. Pills apply only to the test-mode tag. The documented fallback font stack is used without fetching fonts. Body text uses weight 400 and 1.5 line-height for operational readability; muted text maps to steel for contrast. Hovering a filled action uses the supplied deep violet instead of the lighter indigo-hover to retain white-text contrast. Input boundaries map to slate for a visible control edge; decorative dividers retain frost. There are no input controls yet. Responsive spacing comes from the supplied scale, with a 48px target for actions and stacked status rows on narrow screens. Dashboard components remain out of scope.
+
+## Development Workflow
+
+Follow the [five-stage roadmap](docs/features/ROADMAP.md) in order. Stage 1 passed its acceptance criteria on 2026-11-19 ([verification evidence](docs/features/stages/01-project-setup.md#verification-evidence--2026-11-19)); Stages 2–5 remain not started. Keep stages unchecked until required checks pass. Stage 2 adds the local domain, Stage 3 the provider/recovery boundary, Stage 4 dashboard workflows, and Stage 5 full runtime/CI hardening. Update contracts alongside implemented changes.
 
 ## Testing Strategy
 
@@ -120,7 +190,7 @@ Use Jest across backend unit and integration tests, avoiding a second unit-test 
 
 Playwright will exercise the dashboard against a separately selected deterministic fake provider and test database. The fake will still emit signed webhook fixtures through the real verification endpoint. It is allowed only in development/test with explicit simulation enablement. A separate, opt-in Stripe test-mode smoke test will verify the actual SDK, Payment Element, and webhook forwarding. Ordinary CI will require no provider credentials and will never contact Stripe.
 
-Tests start in Stage 1 and expand in every stage. Stage 5 adds the complete scenario matrix, restart/fencing checks, security review, Docker checks, and CI; it does not postpone foundational tests. See [Stage 5](docs/features/stages/05-testing-and-polish.md).
+Health/configuration tests are established in Stage 1 and expand in every stage. Stage 5 adds the complete scenario matrix, restart/fencing checks, security review, Docker checks, and CI; it does not postpone foundational tests. See [Stage 5](docs/features/stages/05-testing-and-polish.md).
 
 ## Engineering Concepts Demonstrated
 

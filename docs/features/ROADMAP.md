@@ -1,6 +1,6 @@
 # Implementation Roadmap
 
-Implement exactly these five stages in order. All are **not started**. Documentation completion does not complete an implementation stage. The [architecture contract](../architecture/README.md) is the source of truth; detailed tasks and verification belong in the linked stage documents.
+Implement exactly these five stages in order. **Stage 1 is complete and verified; Stages 2–5 are not started.** Documentation completion does not complete an implementation stage. The [architecture contract](../architecture/README.md) is the source of truth; detailed tasks and verification belong in the linked stage documents.
 
 Read [AGENTS.md](../../AGENTS.md) and the [supplied design reference](../design/DESIGN.md) before development. Use all four files in `docs/design/` for frontend setup, dashboard implementation and visual verification; the [README context guide](../../README.md#design-and-development-context) explains their roles. Stages 1, 4 and 5 explicitly cover design integration and verification without changing the five-stage scope.
 
@@ -14,7 +14,7 @@ For future explicitly requested installation, use project-local scope only. Insp
 
 ## Stage 1 — Project Setup
 
-- [ ] Not started
+- [x] Complete — acceptance verified on 2026-11-19
 
 **Objective:** establish a reproducible local workspace and empty database connection. **Scope:** npm monorepo, NestJS/Next.js initialization, PostgreSQL/Prisma setup, backend-plus-database Compose environment, API development image, environment validation and health checks. **Dependencies:** architecture documents, Node/npm and Docker; no previous implementation stage.
 
@@ -22,7 +22,7 @@ For future explicitly requested installation, use project-local scope only. Insp
 
 **Acceptance:** a clean local setup starts the backend and PostgreSQL in Compose plus the frontend shell; API container readiness detects database loss; invalid configuration fails safely; source synchronization and restart persistence work; health tests pass. Redis is omitted unless a concrete feature requires it. No payment schema or Stripe calls yet.
 
-Details: [Stage 1 instructions](stages/01-project-setup.md).
+Details and verification evidence: [Stage 1 instructions](stages/01-project-setup.md#verification-evidence--2026-11-19).
 
 ## Stage 2 — Payment Core
 
