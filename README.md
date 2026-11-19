@@ -2,7 +2,7 @@
 
 A test-mode payment application in development that demonstrates reliable backend engineering: payment lifecycles, Stripe integration, idempotent requests, database consistency, verified webhooks, and recovery from failures.
 
-**Project status: Stage 1 complete and acceptance-verified.** The npm workspace, NestJS health API, Next.js shell, and PostgreSQL development/test environments now exist. Payment behavior, provider integration, dashboard workflows and CI remain planned for Stages 2–5. No deployed environment exists.
+**Project status: Stages 1–2 complete and acceptance-verified.** The workspace, health API, frontend shell and local Payment Core now exist: PostgreSQL persistence, idempotent creation, paginated reads and an internal audited state machine. Provider integration, dashboard workflows and CI remain planned for Stages 3–5. No deployed environment exists.
 
 ## Problem Statement
 
@@ -50,13 +50,14 @@ Stage 1 pins stable package versions in the manifests and the single root lockfi
 | Prisma CLI / Client / PostgreSQL adapter | 7.10.1 | `prisma-client` generator, explicit ESM output; `@prisma/adapter-pg` with `pg` 8.16.3 |
 | PostgreSQL | 17.9 | `postgres:17.9-bookworm`, named development volume, separate ephemeral test service |
 | Jest / ts-jest / Supertest | 30.5.2 / 29.4.15 / 7.2.2 | One unit/API runner; Jest ESM uses Node's experimental VM-module flag |
+| Swagger / Express | 12.1.2 / 5.3.0 | Nest 12-compatible DTO documentation; explicitly declared Express for bounded JSON parsing |
 | Tailwind CSS / PostCSS plugin | 4.3.5 | Supplied CSS variables and `@theme` exports imported directly |
 | shadcn primitives / Base UI | Button and Badge / `@base-ui/react` 1.9.0 | Official base-nova source adapted to the supplied theme and folder entry points |
 | UI class helpers | CVA 0.7.1, clsx 2.1.1, tailwind-merge 3.7.0 | Shared `cn()` recognizes the reference's custom typography roles |
 | ESLint / TypeScript ESLint / Prettier | 10.15.0 / 8.73.0 / 3.10.1 | Flat config, Next core web vitals plugin 16.4.6 |
 | Docker / Compose verification environment | CLI 29.9.3, engine 29.5.3 / Compose 5.1.4 | Compose 2.32+ required for Watch `initial_sync` |
 
-Prisma 8 is a release candidate, so this stable setup explicitly stays on supported Prisma 7 ([release status](https://www.prisma.io/docs/orm/release-status)). Use the [version 7 client guidance](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/generating-prisma-client); do not run an unpinned Prisma CLI or skills sync. The generated client is ignored and recreated with `npm run db:generate`. There are no domain models or migrations yet. Database connections are lazy so liveness remains available during an outage; readiness uses `SELECT 1`, with one-second connection, query and statement timeouts, and no domain-table dependency.
+Prisma 8 is a release candidate, so this stable setup explicitly stays on supported Prisma 7 ([release status](https://www.prisma.io/docs/orm/release-status)). Use the [version 7 client guidance](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/generating-prisma-client); do not run an unpinned Prisma CLI or skills sync. The generated client is ignored and recreated with `npm run db:generate`. Stage 2 adds the reviewed `20261119000100_payment_core` migration for Payment, IdempotencyRecord and PaymentEvent. Database connections remain lazy in the application so liveness remains available during an outage; readiness uses `SELECT 1`, with one-second connection, query and statement timeouts, and no domain-table dependency. Development startup applies pending migrations before launching Nest.
 
 ## High-Level Architecture
 
@@ -99,9 +100,9 @@ payment-processing-simulator/
 └── .github/workflows/        # Planned in Stage 5; not created yet
 ```
 
-Stage 1 creates the two applications and infrastructure. The workflow directory remains planned. `skills.md` remains absent; no catalog or additional optional skills were installed during Stage 1.
+Stage 1 creates the two applications and infrastructure; Stage 2 adds `modules/payments`, shared HTTP/error handling and the first domain migration. The workflow directory remains planned. `skills.md` remains absent; no catalog or additional optional skills were installed during Stages 1–2.
 
-The [source structure contract](docs/architecture/project-structure.md) defines DI boundaries, the backend's one-versus-many folder rule, provider adapters under `integrations`, page-local frontend components and API hooks, and component folders with `index.tsx` entry points. Both applications use a `src` directory. Only currently used infrastructure, health and shell folders are present.
+The [source structure contract](docs/architecture/project-structure.md) defines DI boundaries, the backend's one-versus-many folder rule, provider adapters under `integrations`, page-local frontend components and API hooks, and component folders with `index.tsx` entry points. Both applications use a `src` directory. Payments has one root controller, two services under `services/`, feature DTOs and pure state/validation helpers; no provider integration folders are created yet.
 
 ## Local Codex Skills
 
@@ -123,7 +124,7 @@ Status updates will come only from validated provider observations through the s
 
 ## Local Development
 
-Prerequisites: a supported Node 24 LTS release (the exact container/reference release is in `.nvmrc`), npm 11, Git, Docker and Compose 2.32+. Keep ports 3000, 3001, 5432 and the test-only 5433 free. API and database host publishing binds to `127.0.0.1`; Next.js also binds to loopback. Stripe credentials and global CLI installations are unnecessary for Stage 1.
+Prerequisites: a supported Node 24 LTS release (the exact container/reference release is in `.nvmrc`), npm 11, Git, Docker and Compose 2.32+. Keep ports 3000, 3001, 5432 and the test-only 5433 and 3102 free. API and database host publishing binds to `127.0.0.1`; Next.js also binds to loopback. Stripe credentials and global CLI installations are unnecessary for Stages 1–2.
 
 From a clean checkout:
 
@@ -147,7 +148,7 @@ Open [the frontend shell](http://localhost:3000). Its server reads the API's pub
 
 The API runs inside Docker and connects to `db:5432`. Host Prisma tools use `127.0.0.1:5432`; integration tests use the distinct `simulator_test` database on `127.0.0.1:5433`. `API_INTERNAL_ORIGIN` and `WEB_ORIGIN` are server-only Next.js settings; the proxy rejects untrusted Host/Origin values and allows only the two health GET routes. Provider calls and simulations are disabled before Stage 3.
 
-Compose waits for database health before starting the API. `npm run dev` enables Watch: source changes sync without replacing container dependencies; manifest, lockfile, Prisma, TypeScript and Docker configuration changes rebuild the image and run `npm ci` again. `npm run infra:up` starts/rebuilds the same services in the background without Watch. `npm run infra:down` stops/removes development containers while preserving the named database volume. Do not add `--volumes` when stopping normal development.
+Compose waits for database health before starting the API. The API's development script runs `prisma migrate deploy` before Nest, applying pending reviewed migrations on both new and existing databases. `npm run db:migrate` applies the same migrations from the host using `apps/api/.env` when needed. Do not use `db push` to bypass SQL checks. `npm run dev` enables Watch: source changes sync without replacing container dependencies; manifest, lockfile, Prisma, TypeScript and Docker configuration changes rebuild the image and run `npm ci` again. `npm run infra:up` starts/rebuilds the same services in the background without Watch. `npm run infra:down` stops/removes development containers while preserving the named database volume. Do not add `--volumes` when stopping normal development.
 
 The API development image runs as the Node user with init/signal forwarding, OpenSSL for Prisma tooling, and pinned Node/npm versions. Nest CLI runs with `--no-shell` so source reloads stop the application process directly. Stage 5 owns production image hardening and the frontend container. Redis is omitted because no current feature requires it.
 
@@ -162,7 +163,9 @@ npm test
 npm run build
 ```
 
-For real-PostgreSQL health tests, start the isolated test service first:
+If this managed environment rejects Turbopack's worker socket, the unchanged web shell can be verified with `npm run build --workspace @simulator/web -- --webpack`; the API build remains `npm run build --workspace @simulator/api`. The default build script is preserved. This environment limitation also occurred in Stage 1's follow-up verification.
+
+For real-PostgreSQL acceptance tests, start the isolated test service first:
 
 ```bash
 docker compose --env-file .env -f infra/compose.test.yaml up -d --wait
@@ -170,9 +173,27 @@ npm run test:integration
 docker compose --env-file .env -f infra/compose.test.yaml down
 ```
 
-The test service uses tmpfs, not the development volume. The integration suite refuses a non-test database, non-loopback host or port other than 5433. It verifies readiness before domain migrations and the bounded unreachable-database response. Unit/API tests cover configuration validation, HTTP schemas/headers, query/body rejection, outages and safe error handling. Jest's VM-module warning is expected for the ESM runner.
+The test service uses tmpfs, not the development volume. Both the runner and suites refuse a non-test database, non-loopback host or port other than 5433. The runner generates Prisma, deploys migrations, builds the API and runs all integration suites. Tests truncate only the guarded test database, and restart verification starts two successive compiled API processes on port 3102. The suite covers readiness/outages, concurrent HTTP through two independent Prisma pools, rollback at both core-write boundaries, status/audit atomicity, immutable snapshots, SQL constraints and cursor pagination. Unit/API tests cover every state pair, strict validation, canonical hashes, bounded conflict retries, safe errors/logs, throttling and local-only Swagger. Jest's VM-module warning is expected for the ESM runner.
 
-The dependency audit during the shell's shadcn/Tailwind refactor reported zero vulnerabilities. Existing dependency versions were preserved while adding the UI primitives' dependencies; no automatic major downgrade or unverified dependency override was applied. Stage 5 will revisit the full dependency/security review.
+The Stage 2 runtime-only audit (`npm audit --omit=dev`) reports zero vulnerabilities. The full audit currently reports 18 moderate development-tool findings propagated through the existing Jest/glob/minimatch dependency tree. Adding Swagger did not change those existing packages. No automatic major downgrade or unverified override was applied; Stage 5 retains the full dependency/security review.
+
+## Local Payment API
+
+With Compose running, open [Swagger](http://localhost:3001/api/docs) or its [OpenAPI JSON](http://localhost:3001/api/docs-json). Documentation is not registered in production. The four payment routes run only local database operations; the web shell's proxy still exposes health routes only until Stage 4.
+
+```bash
+curl -i http://localhost:3001/api/v1/payments \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: stage2-example-payment-0001' \
+  --data '{"amount":2500,"currency":"usd"}'
+curl 'http://localhost:3001/api/v1/payments?status=CREATED&limit=20'
+```
+
+Creation returns 201, a `Location` header and `Idempotency-Replayed: false`. Repeat the same command to receive the identical body with `Idempotency-Replayed: true`; changing the amount or currency under that key returns 409 `IDEMPOTENCY_KEY_REUSED`. Use a new key for an intentional new payment. Read the returned `Location`, or append `/events` to it for audit history. See the [API contract](docs/architecture/api-design.md) for complete schemas and cursor rules.
+
+Amounts must be JSON integers from 100 through 1,000,000 minor units. Currency is trimmed/uppercased to USD or EUR. Unknown fields, invalid/duplicate headers and malformed cursors return 400 without writes. JSON bodies are limited to 16 KiB; wrong media type returns 415, oversized bodies 413, and creation is limited to 120 requests per minute per IP in the local API process (429 with `Retry-After`). Unavailable persistence returns sanitized retryable 503 responses. Logs include only request IDs, route templates, status, duration, safe error codes and replay disposition.
+
+Creation atomically commits one payment, immutable response record and version-1 audit event using PostgreSQL uniqueness. Status/audit changes are internal and transaction-aware; there is no status mutation endpoint. All public Stage 2 creations stay `CREATED` with `NOT_STARTED` provisioning. Provider fields in details and the event webhook reference serialize as null until Stage 3. External HTTP calls, provider SDKs, confirmation sessions and webhook routes are not implemented yet.
 
 ## Design Integration
 
@@ -182,7 +203,7 @@ The shell keeps the white canvas, navy text, small indigo actions, fine frost di
 
 ## Development Workflow
 
-Follow the [five-stage roadmap](docs/features/ROADMAP.md) in order. Stage 1 passed its acceptance criteria on 2026-11-19 ([verification evidence](docs/features/stages/01-project-setup.md#verification-evidence--2026-11-19)); Stages 2–5 remain not started. Keep stages unchecked until required checks pass. Stage 2 adds the local domain, Stage 3 the provider/recovery boundary, Stage 4 dashboard workflows, and Stage 5 full runtime/CI hardening. Update contracts alongside implemented changes.
+Follow the [five-stage roadmap](docs/features/ROADMAP.md) in order. Stages 1 and 2 passed their acceptance criteria on 2026-11-19 ([setup evidence](docs/features/stages/01-project-setup.md#verification-evidence--2026-11-19), [Payment Core evidence](docs/features/stages/02-payment-core.md#verification-evidence--2026-11-19)); Stages 3–5 remain not started. Stage 3 adds the provider/recovery boundary, Stage 4 dashboard workflows, and Stage 5 full runtime/CI hardening. Update contracts alongside implemented changes.
 
 ## Testing Strategy
 

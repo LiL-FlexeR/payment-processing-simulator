@@ -166,5 +166,7 @@ No lease holds a database transaction or connection open during HTTP. Constraint
 
 ## Migration and Data Lifecycle
 
-Stage 2 will create the first domain migration; Stage 3 will add provider/receipt fields and constraints. Add SQL checks/indexes in reviewed migrations when needed. Test migration application against empty PostgreSQL, FK restriction, concurrent insertion, null uniqueness, and rollback. Keep schema changes forward-oriented; do not edit applied migrations. Stage 1 establishes Prisma configuration and an empty generated client; there are no domain models or migrations yet.
+Stage 2 implements the first domain migration, `apps/api/prisma/migrations/20261119000100_payment_core/migration.sql`, with the three core tables, native enums, `timestamptz(3)`, bigint identity audit IDs, restrictive FKs, unique/indexed access paths and SQL checks. It includes only core Payment fields plus `providerOperationKey` and `provisioningStatus`; provider fields and the webhook reference are deferred to Stage 3 and serialize as null in Stage 2 responses. The event type and provisioning enums already contain their full contract values. Audit checks require creation/transition version pairing and permit null versions only on operational events.
+
+Stage 3 will add provider/receipt fields and constraints. Add SQL checks/indexes in reviewed migrations when needed. Migration application against empty PostgreSQL, FK restriction, concurrent insertion, null uniqueness and rollback are verified in Stage 2. Keep schema changes forward-oriented; do not edit applied migrations. Development startup deploys pending migrations before launching Nest; the guarded integration runner deploys them to the separate test database.
 

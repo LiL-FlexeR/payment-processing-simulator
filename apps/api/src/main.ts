@@ -17,6 +17,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
     abortOnError: false,
+    bodyParser: false,
   });
   configureHttp(app);
   app.enableShutdownHooks();

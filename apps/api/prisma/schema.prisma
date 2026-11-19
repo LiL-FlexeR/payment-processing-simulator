@@ -9,4 +9,83 @@ datasource db {
   provider = "postgresql"
 }
 
-// Stage 1 deliberately has no domain models or migrations.
+enum PaymentStatus {
+  CREATED
+  PENDING
+  FAILED
+  SUCCEEDED
+  CANCELED
+
+  @@map("payment_status")
+}
+
+enum ProvisioningStatus {
+  NOT_STARTED
+  READY
+  RETRYABLE
+  BLOCKED
+  REVIEW_REQUIRED
+
+  @@map("provisioning_status")
+}
+
+enum PaymentEventType {
+  PAYMENT_CREATED
+  PAYMENT_STATUS_CHANGED
+  PROVIDER_RETRY_SCHEDULED
+  PROVIDER_BLOCKED
+  REVIEW_REQUIRED
+  WEBHOOK_PROCESSING_FAILED
+  SYNC_NO_CHANGE
+
+  @@map("payment_event_type")
+}
+
+model Payment {
+  id                   String             @id @db.Uuid
+  amount               Int
+  currency             String
+  status               PaymentStatus      @default(CREATED)
+  statusVersion        Int                @default(1) @map("status_version")
+  providerOperationKey String             @unique(map: "payments_provider_operation_key_key") @map("provider_operation_key")
+  provisioningStatus   ProvisioningStatus @default(NOT_STARTED) @map("provisioning_status")
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  idempotencyRecord    IdempotencyRecord?
+  events               PaymentEvent[]
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)], map: "payments_created_at_id_idx")
+  @@index([status, createdAt(sort: Desc), id(sort: Desc)], map: "payments_status_created_at_id_idx")
+  @@map("payments")
+}
+
+model IdempotencyRecord {
+  id             String   @id @db.Uuid
+  scope          String
+  key            String
+  requestHash    String   @map("request_hash")
+  paymentId      String   @unique @map("payment_id") @db.Uuid
+  responseStatus Int      @map("response_status")
+  responseBody   Json     @map("response_body")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  payment        Payment  @relation(fields: [paymentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([scope, key], map: "idempotency_records_scope_key_key")
+  @@map("idempotency_records")
+}
+
+model PaymentEvent {
+  id            BigInt           @id @default(autoincrement())
+  paymentId     String           @map("payment_id") @db.Uuid
+  type          PaymentEventType
+  fromStatus    PaymentStatus?   @map("from_status")
+  toStatus      PaymentStatus?   @map("to_status")
+  statusVersion Int?             @map("status_version")
+  details       Json
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  payment       Payment          @relation(fields: [paymentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([paymentId, statusVersion], map: "payment_events_payment_id_status_version_key")
+  @@index([paymentId, id(sort: Desc)], map: "payment_events_payment_id_id_idx")
+  @@map("payment_events")
+}

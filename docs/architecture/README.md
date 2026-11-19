@@ -1,6 +1,6 @@
 # Architecture Documentation
 
-This is the implementation contract for the planned Payment Processing Simulator. The application is a local, single-developer, test-mode modular monolith. These documents specify the full intended behavior. Stage 1 has implemented and verified workspace/configuration, database connectivity, health routes and the frontend shell; payment behavior remains planned. See the [roadmap](../features/ROADMAP.md) for verified implementation status.
+This is the implementation contract for the Payment Processing Simulator. The application is a local, single-developer, test-mode modular monolith. These documents specify the full intended behavior. Stages 1–2 have implemented and verified workspace/configuration, database connectivity, health routes, the frontend shell and local Payment Core (creation, idempotency, reads and internal audited transitions). Provider synchronization and dashboard payment workflows remain planned. See the [roadmap](../features/ROADMAP.md) for verified implementation status.
 
 ## Reading Order and Contract Ownership
 

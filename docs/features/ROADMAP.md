@@ -1,6 +1,6 @@
 # Implementation Roadmap
 
-Implement exactly these five stages in order. **Stage 1 is complete and verified; Stages 2–5 are not started.** Documentation completion does not complete an implementation stage. The [architecture contract](../architecture/README.md) is the source of truth; detailed tasks and verification belong in the linked stage documents.
+Implement exactly these five stages in order. **Stages 1–2 are complete and verified; Stages 3–5 are not started.** Documentation completion does not complete an implementation stage. The [architecture contract](../architecture/README.md) is the source of truth; detailed tasks and verification belong in the linked stage documents.
 
 Read [AGENTS.md](../../AGENTS.md) and the [supplied design reference](../design/DESIGN.md) before development. Use all four files in `docs/design/` for frontend setup, dashboard implementation and visual verification; the [README context guide](../../README.md#design-and-development-context) explains their roles. Stages 1, 4 and 5 explicitly cover design integration and verification without changing the five-stage scope.
 
@@ -26,7 +26,7 @@ Details and verification evidence: [Stage 1 instructions](stages/01-project-setu
 
 ## Stage 2 — Payment Core
 
-- [ ] Not started
+- [x] Complete — acceptance verified on 2026-11-19
 
 **Objective:** prove local payment creation and concurrency invariants before adding a provider. **Scope:** core schema, pure state machine, payment service, create/list/detail/event API, immutable idempotency responses, constraints, unit and PostgreSQL integration tests. **Dependencies:** Stage 1 verified.
 
@@ -34,7 +34,7 @@ Details and verification evidence: [Stage 1 instructions](stages/01-project-setu
 
 **Acceptance:** ten concurrent same-key requests leave one payment and creation event; identical retries replay the same 201 body; changed payload returns 409; invalid inputs create no rows; list/details/events agree with persistence.
 
-Details: [Stage 2 instructions](stages/02-payment-core.md).
+Details and verification evidence: [Stage 2 instructions](stages/02-payment-core.md#verification-evidence--2026-11-19).
 
 ## Stage 3 — Stripe Integration
 
