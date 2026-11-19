@@ -56,7 +56,7 @@ The baseline needs no Redis, BullMQ, AWS or specialized cache skill. If an earli
 - [ ] Extend/review the existing API Dockerfile with a hardened runtime target and add the web runtime Dockerfile; verify multi-stage builds, ignored contexts, non-root users and no secrets in images.
 - [ ] Extend and verify Compose startup, readiness, persistence, shutdown and application/database restart recovery.
 - [ ] Run documented setup and checks from a clean checkout and empty test database, recording actual results/limitations.
-- [ ] Run opt-in real Stripe test-mode success/decline/webhook smoke checks separately and record their date and outcome.
+- [ ] Run opt-in real Stripe test-mode success/decline/webhook smoke checks separately and record their date and outcome. This includes the [Stage 3 follow-up](03-stripe-integration.md#deferred-provider-verification), explicitly deferred by the developer on 2026-11-19 until credentials are available; it remains required before declaring the full provider demonstration or MVP fully verified.
 - [ ] Update README with verified commands, exact versions, actual feature status and honest screenshots only if captured.
 - [ ] Add the portfolio demonstration and operator recovery steps to existing docs; avoid creating extra placeholder documents.
 - [ ] Resolve all blocking failures and mark stages complete only after their acceptance evidence exists.

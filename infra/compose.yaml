@@ -26,6 +26,8 @@ services:
       dockerfile: apps/api/Dockerfile
       target: development
     init: true
+    env_file:
+      - ../apps/api/.env
     environment:
       NODE_ENV: development
       API_PORT: '3001'

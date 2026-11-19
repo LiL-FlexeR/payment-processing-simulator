@@ -1,6 +1,6 @@
 # Project Structure and Dependency Boundaries
 
-This document owns the source layout, dependency injection rules, component conventions and frontend API organization. These are implementation instructions. Stage 1 establishes Config, Database, Health and the frontend shell; Stage 2 adds local Payments, DTOs, two services and shared HTTP/error handling. Provider integration and the broader frontend tree below remain the layout for later stages. Keep the five-stage order and [runtime contract](system-overview.md#local-container-runtime).
+This document owns the source layout, dependency injection rules, component conventions and frontend API organization. These are implementation instructions. Stage 1 establishes Config, Database, Health and the frontend shell; Stage 2 adds local Payments, DTOs, two services and shared HTTP/error handling. Stage 3 adds provider-neutral contracts/binding, Stripe/fake adapters, payment lease/sync services and Webhooks; the broader frontend tree below remains planned for Stage 4. Keep the five-stage order and [runtime contract](system-overview.md#local-container-runtime).
 
 ## Backend Layout
 

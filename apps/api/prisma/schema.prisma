@@ -1,7 +1,7 @@
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/generated/prisma"
-  moduleFormat = "esm"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
   importFileExtension = "js"
 }
 
@@ -41,18 +41,39 @@ enum PaymentEventType {
   @@map("payment_event_type")
 }
 
+enum WebhookStatus {
+  RECEIVED
+  RETRYABLE
+  PROCESSED
+  IGNORED
+  REVIEW_REQUIRED
+
+  @@map("webhook_status")
+}
+
 model Payment {
-  id                   String             @id @db.Uuid
-  amount               Int
-  currency             String
-  status               PaymentStatus      @default(CREATED)
-  statusVersion        Int                @default(1) @map("status_version")
-  providerOperationKey String             @unique(map: "payments_provider_operation_key_key") @map("provider_operation_key")
-  provisioningStatus   ProvisioningStatus @default(NOT_STARTED) @map("provisioning_status")
-  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt            DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  idempotencyRecord    IdempotencyRecord?
-  events               PaymentEvent[]
+  id                     String             @id @db.Uuid
+  amount                 Int
+  currency               String
+  status                 PaymentStatus      @default(CREATED)
+  statusVersion          Int                @default(1) @map("status_version")
+  providerOperationKey   String             @unique(map: "payments_provider_operation_key_key") @map("provider_operation_key")
+  provisioningStatus     ProvisioningStatus @default(NOT_STARTED) @map("provisioning_status")
+  stripePaymentIntentId  String?            @unique(map: "payments_stripe_payment_intent_id_key") @map("stripe_payment_intent_id")
+  providerStatus         String?            @map("provider_status")
+  providerCreateParams   Json?              @map("provider_create_params")
+  firstProviderRequestAt DateTime?          @map("first_provider_request_at") @db.Timestamptz(3)
+  createAttemptCount     Int                @default(0) @map("create_attempt_count")
+  nextProviderRetryAt    DateTime?          @map("next_provider_retry_at") @db.Timestamptz(3)
+  lastProviderErrorCode  String?            @map("last_provider_error_code")
+  leaseToken             String?            @map("lease_token") @db.Uuid
+  leaseExpiresAt         DateTime?          @map("lease_expires_at") @db.Timestamptz(3)
+  lastSyncedAt           DateTime?          @map("last_synced_at") @db.Timestamptz(3)
+  createdAt              DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  idempotencyRecord      IdempotencyRecord?
+  events                 PaymentEvent[]
+  webhooks               WebhookEvent[]
 
   @@index([createdAt(sort: Desc), id(sort: Desc)], map: "payments_created_at_id_idx")
   @@index([status, createdAt(sort: Desc), id(sort: Desc)], map: "payments_status_created_at_id_idx")
@@ -75,17 +96,48 @@ model IdempotencyRecord {
 }
 
 model PaymentEvent {
-  id            BigInt           @id @default(autoincrement())
-  paymentId     String           @map("payment_id") @db.Uuid
-  type          PaymentEventType
-  fromStatus    PaymentStatus?   @map("from_status")
-  toStatus      PaymentStatus?   @map("to_status")
-  statusVersion Int?             @map("status_version")
-  details       Json
-  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  payment       Payment          @relation(fields: [paymentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  id             BigInt           @id @default(autoincrement())
+  paymentId      String           @map("payment_id") @db.Uuid
+  webhookEventId String?          @map("webhook_event_id")
+  type           PaymentEventType
+  fromStatus     PaymentStatus?   @map("from_status")
+  toStatus       PaymentStatus?   @map("to_status")
+  statusVersion  Int?             @map("status_version")
+  details        Json
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  payment        Payment          @relation(fields: [paymentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  webhookEvent   WebhookEvent?    @relation(fields: [webhookEventId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([paymentId, statusVersion], map: "payment_events_payment_id_status_version_key")
   @@index([paymentId, id(sort: Desc)], map: "payment_events_payment_id_id_idx")
+  @@index([webhookEventId], map: "payment_events_webhook_event_id_idx")
   @@map("payment_events")
+}
+
+model WebhookEvent {
+  id                   String         @id
+  type                 String
+  apiVersion           String         @map("api_version")
+  providerCreatedAt    DateTime       @map("provider_created_at") @db.Timestamptz(3)
+  livemode             Boolean
+  providerObjectId     String?        @map("provider_object_id")
+  metadataPaymentId    String?        @map("metadata_payment_id")
+  metadataInstanceId   String?        @map("metadata_instance_id")
+  metadataOperationKey String?        @map("metadata_operation_key")
+  paymentId            String?        @map("payment_id") @db.Uuid
+  status               WebhookStatus  @default(RECEIVED)
+  deliveryCount        Int            @default(1) @map("delivery_count")
+  processingAttempts   Int            @default(0) @map("processing_attempts")
+  firstReceivedAt      DateTime       @default(now()) @map("first_received_at") @db.Timestamptz(3)
+  lastReceivedAt       DateTime       @default(now()) @map("last_received_at") @db.Timestamptz(3)
+  nextRetryAt          DateTime?      @map("next_retry_at") @db.Timestamptz(3)
+  processedAt          DateTime?      @map("processed_at") @db.Timestamptz(3)
+  lastErrorCode        String?        @map("last_error_code")
+  processingHistory    Json           @default("[]") @map("processing_history")
+  payment              Payment?       @relation(fields: [paymentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  events               PaymentEvent[]
+
+  @@index([paymentId], map: "webhook_events_payment_id_idx")
+  @@index([status, nextRetryAt], map: "webhook_events_status_next_retry_at_idx")
+  @@map("webhook_events")
 }

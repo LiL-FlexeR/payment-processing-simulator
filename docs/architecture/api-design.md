@@ -2,7 +2,7 @@
 
 ## Conventions and Shared Schemas
 
-Backend base path: `/api/v1`. Local backend origin: `http://localhost:3001`; the browser uses the Next.js same-origin proxy on port 3000. Stages 1–2 implement health and the four local payment create/list/detail/event routes, with generated local Swagger at `/api/docs`. Provider/session/sync/webhook/simulation examples below remain **future contracts**. The frontend proxy still exposes only health until Stage 4. See the [Stage 2 verification evidence](../features/stages/02-payment-core.md#verification-evidence--2026-11-19). Use JSON with camelCase fields, UUID payment IDs, uppercase local status/currency, UTC ISO-8601 timestamps, and decimal strings for audit bigint IDs. Reject unknown body fields and duplicate singleton headers. Do not coerce monetary strings or floats into integers.
+Backend base path: `/api/v1`. Local backend origin: `http://localhost:3001`; the browser uses the Next.js same-origin proxy on port 3000. Stages 1–3 implement health, payment create/list/detail/events, confirmation sessions, explicit sync and signed snapshot webhooks, with local Swagger at `/api/docs`. Simulation routes remain **future Stage 4 contracts**. Stage 3 is complete with deterministic checks passing; the developer explicitly deferred real Stripe smoke execution to Stage 5 until credentials are available. Actual Stripe behavior remains unverified. The frontend proxy still exposes only health until Stage 4. See the [Stage 2 verification evidence](../features/stages/02-payment-core.md#verification-evidence--2026-11-19). Use JSON with camelCase fields, UUID payment IDs, uppercase local status/currency, UTC ISO-8601 timestamps, and decimal strings for audit bigint IDs. Reject unknown body fields and duplicate singleton headers. Do not coerce monetary strings or floats into integers.
 
 Normal JSON requests use `Content-Type: application/json` and optional `X-Request-Id` (UUID; otherwise generate one). Responses echo a safe generated/validated `X-Request-Id`, use `Cache-Control: no-store`, and never include a stack trace. No authentication is required for the local demo payment endpoints; the loopback-only boundary in the [system overview](system-overview.md) is part of this contract. Browser-facing proxy requests must satisfy its Host/Origin policy.
 
@@ -80,7 +80,7 @@ Exactly these fields are accepted. Payment amounts and currency are immutable af
 | `PAYLOAD_TOO_LARGE` | 413 | JSON body exceeds its size limit |
 | `RATE_LIMITED` | 429 | Local creation request limit reached; retry after the indicated delay |
 
-Stage 2 limits local creation to 120 requests per minute per IP per API process. This modest in-memory abuse limit is independent of durable payment idempotency; it is not a consistency lock. Structured HTTP logs allow only safe correlation IDs, route templates, methods, statuses, durations, error codes and replay flags. Request bodies, keys, query strings, database/driver messages and provider data are excluded.
+The API limits local creation to 120 requests per minute per IP per API process. This modest in-memory abuse limit is independent of durable payment idempotency; it is not a consistency lock. Structured HTTP logs allow only safe correlation IDs, route templates, methods, statuses, durations, error codes and replay flags. Request bodies, keys, query strings, database/driver messages and provider data are excluded.
 
 Set `Retry-After` to the rounded-up remaining backoff/lease seconds on retryable 409/503 responses, with a minimum of 1. A `REVIEW_REQUIRED` financial observation on sync is returned as a 409 after its disposition is committed. Webhook permanent review dispositions instead return 200 as described below.
 
@@ -194,7 +194,7 @@ Stripe-Signature: t=EXAMPLE,v1=EXAMPLE
 {"id":"evt_example","object":"event","livemode":false,"type":"payment_intent.succeeded","data":{"object":{"id":"pi_example"}}}
 ```
 
-This abbreviated envelope/signature is illustrative and cannot pass verification. Future tests must generate complete version-compatible fixtures and real test signatures. **Deduplication:** unique event ID, independently of payment API keys; separate event IDs are still checked against current provider state. See [the complete processing algorithm](idempotency-and-webhooks.md).
+This abbreviated envelope/signature is illustrative and cannot pass verification. Stage 3 tests generate complete version-compatible fixtures and valid SDK/fake signatures; this abbreviated example is not a fixture. **Deduplication:** unique event ID, independently of payment API keys; separate event IDs are still checked against current provider state. See [the complete processing algorithm](idempotency-and-webhooks.md).
 
 ## Development-Only Simulation Contracts
 

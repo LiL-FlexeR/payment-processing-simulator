@@ -1,11 +1,23 @@
 import { Injectable } from '@nestjs/common';
 
+export const STRIPE_API_VERSION = '2026-11-18.endive';
+
 export interface AppConfig {
   nodeEnv: 'development' | 'test' | 'production';
   apiPort: number;
   databaseUrl: string;
   webOrigin: string;
   appInstanceId: string;
+  paymentProvider: 'stripe' | 'fake';
+  simulationEnabled: boolean;
+  simulationToken: string;
+  testWebhookSecret: string;
+  stripeSecretKey: string;
+  stripePublishableKey: string;
+  stripeWebhookSecret: string;
+  stripeAccountId: string;
+  stripeApiVersion: typeof STRIPE_API_VERSION;
+  paymentReturnUrl: string;
 }
 
 export function parseConfig(env: NodeJS.ProcessEnv): AppConfig {
@@ -55,13 +67,62 @@ export function parseConfig(env: NodeJS.ProcessEnv): AppConfig {
     )
   )
     invalid.push('APP_INSTANCE_ID (stable UUID)');
+  const provider = env.PAYMENT_PROVIDER;
+  if (!['stripe', 'fake'].includes(provider ?? ''))
+    invalid.push('PAYMENT_PROVIDER');
+  const simulationEnabled = env.SIMULATION_ENABLED === 'true';
   if (
-    env.PAYMENT_PROVIDER ||
-    (env.SIMULATION_ENABLED && env.SIMULATION_ENABLED !== 'false')
+    env.SIMULATION_ENABLED &&
+    !['true', 'false'].includes(env.SIMULATION_ENABLED)
   )
-    invalid.push(
-      'PAYMENT_PROVIDER / SIMULATION_ENABLED (unavailable before Stage 3)',
-    );
+    invalid.push('SIMULATION_ENABLED');
+  if (nodeEnv === 'production' && (provider === 'fake' || simulationEnabled))
+    invalid.push('PAYMENT_PROVIDER / SIMULATION_ENABLED (production)');
+  if (
+    simulationEnabled &&
+    !/^[A-Za-z0-9_-]{32,}$/.test(env.SIMULATION_TOKEN ?? '')
+  )
+    invalid.push('SIMULATION_TOKEN');
+  if (provider === 'fake') {
+    if (!simulationEnabled)
+      invalid.push('SIMULATION_ENABLED (required for fake)');
+    if (!/^whsec_fake_[A-Za-z0-9_-]{32,}$/.test(env.TEST_WEBHOOK_SECRET ?? ''))
+      invalid.push('TEST_WEBHOOK_SECRET');
+    try {
+      const url = new URL(env.DATABASE_URL ?? '');
+      if (!url.pathname.endsWith('_test') && !url.pathname.endsWith('_fake'))
+        throw new Error();
+    } catch {
+      invalid.push('DATABASE_URL (separate _test or _fake database for fake)');
+    }
+  }
+  if (provider === 'stripe') {
+    for (const [key, pattern] of [
+      ['STRIPE_SECRET_KEY', /^sk_test_[A-Za-z0-9]+$/],
+      ['NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', /^pk_test_[A-Za-z0-9]+$/],
+      ['STRIPE_WEBHOOK_SECRET', /^whsec_[A-Za-z0-9]+$/],
+      ['STRIPE_ACCOUNT_ID', /^acct_[A-Za-z0-9]+$/],
+    ] as const)
+      if (!pattern.test(env[key] ?? '')) invalid.push(key);
+    if (env.STRIPE_API_VERSION !== STRIPE_API_VERSION)
+      invalid.push('STRIPE_API_VERSION');
+    if (env.STRIPE_WEBHOOK_SECRET === env.TEST_WEBHOOK_SECRET)
+      invalid.push('STRIPE_WEBHOOK_SECRET (must differ from fake)');
+  }
+  try {
+    const url = new URL(env.PAYMENT_RETURN_URL ?? '');
+    if (
+      url.origin !== env.WEB_ORIGIN ||
+      url.pathname !== '/payments/return' ||
+      url.search ||
+      url.hash ||
+      url.username ||
+      url.password
+    )
+      throw new Error();
+  } catch {
+    invalid.push('PAYMENT_RETURN_URL (fixed WEB_ORIGIN/payments/return)');
+  }
   if (invalid.length)
     throw new Error(
       `Invalid configuration: ${invalid.join(', ')}. Check the environment examples; values are not logged.`,
@@ -72,6 +133,16 @@ export function parseConfig(env: NodeJS.ProcessEnv): AppConfig {
     databaseUrl: env.DATABASE_URL!,
     webOrigin: env.WEB_ORIGIN!,
     appInstanceId: env.APP_INSTANCE_ID!,
+    paymentProvider: provider as AppConfig['paymentProvider'],
+    simulationEnabled,
+    simulationToken: env.SIMULATION_TOKEN ?? '',
+    testWebhookSecret: env.TEST_WEBHOOK_SECRET ?? '',
+    stripeSecretKey: env.STRIPE_SECRET_KEY ?? '',
+    stripePublishableKey: env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '',
+    stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET ?? '',
+    stripeAccountId: env.STRIPE_ACCOUNT_ID ?? '',
+    stripeApiVersion: STRIPE_API_VERSION,
+    paymentReturnUrl: env.PAYMENT_RETURN_URL!,
   };
 }
 

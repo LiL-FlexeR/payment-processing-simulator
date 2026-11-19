@@ -1,3 +1,5 @@
+import { PAYMENT_PROVIDER } from '../src/integrations/payment-provider.token.js';
+import { fakeEnv, stripeEnv } from './provider-env.js';
 import { jest } from '@jest/globals';
 import { INestApplication, Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -26,7 +28,9 @@ describe('payment HTTP infrastructure', () => {
   async function start(nodeEnv = 'test') {
     const config = new ConfigService(
       parseConfig({
+        ...fakeEnv,
         NODE_ENV: nodeEnv,
+        ...(nodeEnv === 'production' ? stripeEnv : {}),
         DATABASE_URL:
           'postgresql://user:private-password@127.0.0.1:5433/simulator_test',
         WEB_ORIGIN: 'http://localhost:3000',
@@ -36,6 +40,8 @@ describe('payment HTTP infrastructure', () => {
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(ConfigService)
       .useValue(config)
+      .overrideProvider(PAYMENT_PROVIDER)
+      .useValue({})
       .overrideProvider(DatabaseService)
       .useValue({ isReady: async () => true })
       .overrideProvider(PaymentsService)

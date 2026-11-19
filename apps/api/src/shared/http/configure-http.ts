@@ -7,7 +7,13 @@ import {
   INestApplication,
   Logger,
 } from '@nestjs/common';
-import { json, type NextFunction, type Request, type Response } from 'express';
+import {
+  json,
+  raw,
+  type NextFunction,
+  type Request,
+  type Response,
+} from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '../config/config.service.js';
 import {
@@ -35,7 +41,8 @@ class SafeExceptionFilter implements ExceptionFilter {
           : 'INTERNAL_ERROR');
     const retryable = safe?.retryable ?? status >= 500;
     response.locals.errorCode = code;
-    if (retryable && status === 503) response.setHeader('Retry-After', '1');
+    if (retryable && (status === 503 || status === 409))
+      response.setHeader('Retry-After', String(safe?.retryAfterSeconds ?? 1));
     response.status(status).json({
       error: {
         code,
@@ -96,10 +103,24 @@ export function configureHttp(app: INestApplication): void {
       const singletons = new Set<string>();
       for (let index = 0; index < request.rawHeaders.length; index += 2) {
         const name = request.rawHeaders[index]!.toLowerCase();
-        if (!['idempotency-key', 'x-request-id', 'content-type'].includes(name))
+        if (
+          ![
+            'idempotency-key',
+            'x-request-id',
+            'content-type',
+            'stripe-signature',
+          ].includes(name)
+        )
           continue;
-        if (singletons.has(name))
+        if (singletons.has(name)) {
+          if (name === 'stripe-signature')
+            throw new ApiError(
+              'INVALID_WEBHOOK',
+              400,
+              'Duplicate signature headers are not accepted.',
+            );
           invalid('headers', 'Duplicate singleton headers are not accepted.');
+        }
         singletons.add(name);
       }
       if (
@@ -127,6 +148,13 @@ export function configureHttp(app: INestApplication): void {
             true,
           );
         }
+      }
+      if (
+        request.method === 'POST' &&
+        /^\/api\/v1\/(payments(?:\/[^/]+\/(?:confirmation-session|sync))?|webhooks\/stripe)\/?$/i.test(
+          request.path,
+        )
+      ) {
         if (!request.is('application/json'))
           throw new ApiError(
             'UNSUPPORTED_MEDIA_TYPE',
@@ -142,26 +170,59 @@ export function configureHttp(app: INestApplication): void {
   });
   // Register after correlation middleware so parser failures have safe request IDs.
   const parseJson = json({ limit: '16kb', strict: false });
+  // With Nest's automatic parser disabled, this route-specific raw parser keeps
+  // the original Buffer until the selected provider verifies it. Never reserialize.
+  const parseWebhook = raw({
+    type: 'application/json',
+    limit: '256kb',
+    inflate: false,
+  });
   app.use((request: Request, response: Response, next: NextFunction) => {
-    // Normalize parser failures before Nest wraps SyntaxError/HTTP errors.
-    parseJson(request, response, (error?: unknown) => {
-      const type = (error as { type?: string } | null)?.type;
-      if (type === 'entity.parse.failed')
-        return next(new ApiError('VALIDATION_ERROR', 400, 'Malformed JSON.'));
-      if (type === 'entity.too.large')
-        return next(
-          new ApiError('PAYLOAD_TOO_LARGE', 413, 'JSON body exceeds 16 KiB.'),
-        );
-      if (type === 'charset.unsupported' || type === 'encoding.unsupported')
+    const webhook =
+      request.method === 'POST' &&
+      /^\/api\/v1\/webhooks\/stripe\/?$/i.test(request.path);
+    if (webhook) {
+      const charset = /;\s*charset="?([^";\s]+)/i.exec(
+        request.headers['content-type'] ?? '',
+      )?.[1];
+      if (charset && charset.toLowerCase() !== 'utf-8')
         return next(
           new ApiError(
             'UNSUPPORTED_MEDIA_TYPE',
             415,
-            'Unsupported JSON encoding.',
+            'Unsupported webhook encoding.',
           ),
         );
-      next(error);
-    });
+    }
+    // Normalize parser failures before Nest wraps SyntaxError/HTTP errors.
+    (webhook ? parseWebhook : parseJson)(
+      request,
+      response,
+      (error?: unknown) => {
+        const type = (error as { type?: string } | null)?.type;
+        if (type === 'entity.parse.failed')
+          return next(new ApiError('VALIDATION_ERROR', 400, 'Malformed JSON.'));
+        if (type === 'entity.too.large')
+          return next(
+            new ApiError(
+              'PAYLOAD_TOO_LARGE',
+              413,
+              webhook
+                ? 'Webhook body exceeds 256 KiB.'
+                : 'JSON body exceeds 16 KiB.',
+            ),
+          );
+        if (type === 'charset.unsupported' || type === 'encoding.unsupported')
+          return next(
+            new ApiError(
+              'UNSUPPORTED_MEDIA_TYPE',
+              415,
+              'Unsupported JSON encoding.',
+            ),
+          );
+        next(error);
+      },
+    );
   });
   app.useGlobalFilters(new SafeExceptionFilter());
   if (app.get(ConfigService).values.nodeEnv !== 'production') {
@@ -170,7 +231,7 @@ export function configureHttp(app: INestApplication): void {
       new DocumentBuilder()
         .setTitle('Payment Processing Simulator')
         .setDescription(
-          'Stage 2: local payment persistence and reads. No provider operations.',
+          'Test-mode payments, confirmation sessions, fenced synchronization and verified snapshot webhooks.',
         )
         .setVersion('1')
         .build(),
@@ -178,6 +239,8 @@ export function configureHttp(app: INestApplication): void {
     // DTOs describe exact objects; reject unlisted body fields at runtime too.
     const create = document.components?.schemas?.CreatePaymentDto;
     if (create && !('$ref' in create)) create.additionalProperties = false;
+    const empty = document.components?.schemas?.EmptyPaymentOperationDto;
+    if (empty && !('$ref' in empty)) empty.additionalProperties = false;
     SwaggerModule.setup('api/docs', app, document);
   }
 }

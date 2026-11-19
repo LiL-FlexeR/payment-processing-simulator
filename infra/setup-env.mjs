@@ -17,10 +17,19 @@ if (templates.some(([, target]) => existsSync(new URL(target, root)))) {
 } else {
   const password = randomBytes(24).toString('hex');
   const instanceId = randomUUID();
+  const simulationToken = randomBytes(32).toString('hex');
+  const fakeWebhookSecret = randomBytes(32).toString('hex');
+  const integrationWebhookSecret = randomBytes(32).toString('hex');
   for (const [template, target] of templates) {
     const contents = readFileSync(new URL(template, root), 'utf8')
       .replaceAll('REPLACE_WITH_RANDOM_HEX', password)
-      .replaceAll('REPLACE_WITH_UUID', instanceId);
+      .replaceAll('REPLACE_WITH_UUID', instanceId)
+      .replaceAll('REPLACE_WITH_SIMULATION_TOKEN', simulationToken)
+      .replaceAll('REPLACE_WITH_FAKE_WEBHOOK_SECRET', fakeWebhookSecret)
+      .replaceAll(
+        'REPLACE_WITH_INTEGRATION_WEBHOOK_SECRET',
+        integrationWebhookSecret,
+      );
     writeFileSync(fileURLToPath(new URL(target, root)), contents, {
       flag: 'wx',
       mode: 0o600,

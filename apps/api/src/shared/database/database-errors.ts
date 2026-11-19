@@ -1,5 +1,24 @@
 import { Prisma } from '../../generated/prisma/client.js';
 
+export function isProviderLinkConflict(error: unknown): boolean {
+  if (
+    !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+    error.code !== 'P2002'
+  )
+    return false;
+  const target: unknown = error.meta?.target;
+  if (Array.isArray(target) && target.includes('stripe_payment_intent_id'))
+    return true;
+  const cause = (
+    error.meta?.driverAdapterError as
+      { cause?: { constraint?: { index?: string } } } | undefined
+  )?.cause;
+  return (
+    target === 'payments_stripe_payment_intent_id_key' ||
+    cause?.constraint?.index === 'payments_stripe_payment_intent_id_key'
+  );
+}
+
 export function isIdempotencyConflict(error: unknown): boolean {
   if (
     !(error instanceof Prisma.PrismaClientKnownRequestError) ||

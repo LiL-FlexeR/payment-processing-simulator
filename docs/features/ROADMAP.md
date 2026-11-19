@@ -1,6 +1,6 @@
 # Implementation Roadmap
 
-Implement exactly these five stages in order. **Stages 1–2 are complete and verified; Stages 3–5 are not started.** Documentation completion does not complete an implementation stage. The [architecture contract](../architecture/README.md) is the source of truth; detailed tasks and verification belong in the linked stage documents.
+Implement exactly these five stages in order. **Stages 1–3 are complete; Stage 3’s deterministic acceptance is verified and its real Stripe smoke check is explicitly deferred by the developer to Stage 5 until credentials are available. Stages 4–5 are not started.** Documentation completion does not complete an implementation stage. The [architecture contract](../architecture/README.md) is the source of truth; detailed tasks and verification belong in the linked stage documents.
 
 Read [AGENTS.md](../../AGENTS.md) and the [supplied design reference](../design/DESIGN.md) before development. Use all four files in `docs/design/` for frontend setup, dashboard implementation and visual verification; the [README context guide](../../README.md#design-and-development-context) explains their roles. Stages 1, 4 and 5 explicitly cover design integration and verification without changing the five-stage scope.
 
@@ -38,7 +38,7 @@ Details and verification evidence: [Stage 2 instructions](stages/02-payment-core
 
 ## Stage 3 — Stripe Integration
 
-- [ ] Not started
+- [x] Complete — deterministic acceptance verified on 2026-11-19; real Stripe smoke **SKIPPED / DEFERRED** to Stage 5 by the developer’s explicit decision, pending credentials
 
 **Objective:** add safe provider confirmation, verified webhooks and recoverable synchronization. **Scope:** Stripe test configuration, one-intent integration, confirmation sessions, raw-body signature checks, receipt deduplication, fenced leases, state mapping, provider errors and recovery. **Dependencies:** Stage 2 verified and optional test-account credentials for provider smoke checks.
 
@@ -46,7 +46,7 @@ Details and verification evidence: [Stage 2 instructions](stages/02-payment-core
 
 **Acceptance:** signed duplicate/out-of-order events cannot duplicate or regress financial transitions; an unknown create retries the same key within the cutoff; stale lease owners cannot commit; business rollback keeps receipts unfinished; credentials are unnecessary for deterministic tests.
 
-Details: [Stage 3 instructions](stages/03-stripe-integration.md).
+Details and verification evidence: [Stage 3 instructions](stages/03-stripe-integration.md#verification-evidence--2026-11-19).
 
 ## Stage 4 — Payment Simulator
 

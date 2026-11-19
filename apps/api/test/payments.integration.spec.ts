@@ -67,13 +67,13 @@ describe('Payment Core with real PostgreSQL and concurrent HTTP', () => {
   });
   beforeEach(async () => {
     await pool.query(
-      'TRUNCATE idempotency_records, payment_events, payments RESTART IDENTITY',
+      'TRUNCATE idempotency_records, payment_events, webhook_events, payments RESTART IDENTITY',
     );
     logs.mockClear();
   });
   afterAll(async () => {
     await pool.query(
-      'TRUNCATE idempotency_records, payment_events, payments RESTART IDENTITY',
+      'TRUNCATE idempotency_records, payment_events, webhook_events, payments RESTART IDENTITY',
     );
     await app.close();
     await other.close();
@@ -699,10 +699,10 @@ describe('Payment Core with real PostgreSQL and concurrent HTTP', () => {
     await request(app.getHttpServer())
       .post(location + '/confirmation-session')
       .send({})
-      .expect(404);
+      .expect(200);
   });
 
-  it('generates local Swagger from DTOs for exactly the four payment routes', async () => {
+  it('generates local Swagger from DTOs for the local and provider payment routes', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/docs-json')
       .expect(200);
@@ -713,7 +713,9 @@ describe('Payment Core with real PostgreSQL and concurrent HTTP', () => {
     ).toEqual([
       '/api/v1/payments',
       '/api/v1/payments/{id}',
+      '/api/v1/payments/{id}/confirmation-session',
       '/api/v1/payments/{id}/events',
+      '/api/v1/payments/{id}/sync',
     ]);
     expect(
       response.body.components.schemas.CreatePaymentDto.additionalProperties,

@@ -9,6 +9,7 @@ export class ApiError extends HttpException {
     message: string,
     readonly retryable = false,
     readonly details: ValidationDetail[] | null = null,
+    readonly retryAfterSeconds?: number,
   ) {
     super(message, status);
   }

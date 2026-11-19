@@ -11,6 +11,13 @@ if (
     'Refusing integration setup: use NODE_ENV=test and a separate loopback database ending in _test on port 5433.',
   );
 }
+Object.assign(process.env, {
+  PAYMENT_PROVIDER: 'fake',
+  SIMULATION_ENABLED: 'true',
+  SIMULATION_TOKEN: 'test_simulation_token_0123456789abcdef',
+  TEST_WEBHOOK_SECRET: 'whsec_fake_0123456789abcdef0123456789abcdef',
+  PAYMENT_RETURN_URL: 'http://localhost:3000/payments/return',
+});
 for (const args of [
   ['../../node_modules/prisma/build/index.js', 'generate'],
   ['../../node_modules/prisma/build/index.js', 'migrate', 'deploy'],

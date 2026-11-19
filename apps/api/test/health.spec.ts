@@ -1,3 +1,4 @@
+import { fakeEnv } from './provider-env.js';
 import { jest } from '@jest/globals';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -15,6 +16,7 @@ describe('health HTTP contract', () => {
   const database = { isReady: jest.fn<() => Promise<boolean>>() };
   const config = new ConfigService(
     parseConfig({
+      ...fakeEnv,
       NODE_ENV: 'test',
       DATABASE_URL:
         'postgresql://user:private-password@127.0.0.1:5433/simulator_test',

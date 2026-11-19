@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   Post,
   Query,
@@ -40,6 +41,12 @@ import {
   queryFields,
 } from './payment-validation.js';
 import { PaymentsService } from './services/payments.service.js';
+import { PaymentSyncService } from './services/payment-sync.service.js';
+import {
+  ConfirmationSessionDto,
+  EmptyPaymentOperationDto,
+} from './dto/confirmation-session.dto.js';
+import { invalid } from '../../shared/http/api-error.js';
 
 @ApiTags('payments')
 @ApiHeader({
@@ -58,7 +65,64 @@ import { PaymentsService } from './services/payments.service.js';
 })
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly payments: PaymentsService) {}
+  constructor(
+    private readonly payments: PaymentsService,
+    private readonly synchronization: PaymentSyncService,
+  ) {}
+
+  private operation(request: Request, id: string, body: unknown) {
+    queryFields(request.query, []);
+    if (
+      body === null ||
+      typeof body !== 'object' ||
+      Array.isArray(body) ||
+      Object.keys(body).length
+    )
+      invalid('body', 'Expected exactly an empty JSON object.');
+    return paymentId(id);
+  }
+
+  @Post(':id/confirmation-session')
+  @HttpCode(200)
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiBody({ type: EmptyPaymentOperationDto })
+  @ApiOkResponse({ type: ConfirmationSessionDto })
+  @ApiResponse({ status: 404, type: ErrorDto })
+  @ApiResponse({ status: 409, type: ErrorDto })
+  @ApiResponse({ status: 502, type: ErrorDto })
+  @ApiOperation({
+    summary:
+      'Create/recover one intent; release its secret only after validated linkage commits.',
+  })
+  confirmationSession(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.synchronization.confirmationSession(
+      this.operation(request, id, body),
+    );
+  }
+
+  @Post(':id/sync')
+  @HttpCode(200)
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiBody({ type: EmptyPaymentOperationDto })
+  @ApiOkResponse({ type: PaymentDetailsDto })
+  @ApiResponse({ status: 404, type: ErrorDto })
+  @ApiResponse({ status: 409, type: ErrorDto })
+  @ApiResponse({ status: 502, type: ErrorDto })
+  @ApiOperation({
+    summary:
+      'Retrieve a known intent and synchronize the local projection without confirming or creating.',
+  })
+  sync(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.synchronization.sync(this.operation(request, id, body));
+  }
 
   @Post()
   @ApiOperation({

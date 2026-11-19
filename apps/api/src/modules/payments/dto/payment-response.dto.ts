@@ -78,11 +78,11 @@ export class PaymentDetailsDto extends PaymentSummaryDto {
   static fromPayment(payment: Payment): PaymentDetailsDto {
     return {
       ...PaymentSummaryDto.fromPayment(payment),
-      stripePaymentIntentId: null,
-      providerStatus: null,
-      lastSyncedAt: null,
-      nextProviderRetryAt: null,
-      lastProviderErrorCode: null,
+      stripePaymentIntentId: payment.stripePaymentIntentId,
+      providerStatus: payment.providerStatus,
+      lastSyncedAt: payment.lastSyncedAt?.toISOString() ?? null,
+      nextProviderRetryAt: payment.nextProviderRetryAt?.toISOString() ?? null,
+      lastProviderErrorCode: payment.lastProviderErrorCode,
     };
   }
 }
@@ -131,7 +131,7 @@ export class PaymentEventDto {
       fromStatus: event.fromStatus,
       toStatus: event.toStatus,
       statusVersion: event.statusVersion,
-      webhookEventId: null,
+      webhookEventId: event.webhookEventId,
       details,
       createdAt: event.createdAt.toISOString(),
     };

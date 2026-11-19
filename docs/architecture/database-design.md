@@ -128,7 +128,7 @@ There is no fulfillment, email, or ledger operation in the MVP. The auditable tr
 | `type` / `apiVersion` / `providerCreatedAt` | Verified envelope metadata; timestamps are audit data, not ordering authority |
 | `livemode` | Must be false; reject live-mode input before insertion |
 | `providerObjectId` | Nullable PaymentIntent ID; no FK because the provider object can precede local linkage |
-| `metadataPaymentId` / `metadataInstanceId` | Nullable allowlisted strings used only as correlation hints |
+| `metadataPaymentId` / `metadataInstanceId` / `metadataOperationKey` | Nullable allowlisted strings used only as correlation hints; retain the operation identity to detect conflicting redelivery |
 | `paymentId` | Nullable FK to Payment; restrict deletion |
 | `status` | Enum `RECEIVED`, `RETRYABLE`, `PROCESSED`, `IGNORED`, `REVIEW_REQUIRED` |
 | `deliveryCount` | Integer starts at 1; increment atomically for each verified redelivery |
@@ -136,7 +136,7 @@ There is no fulfillment, email, or ledger operation in the MVP. The auditable tr
 | `firstReceivedAt` / `lastReceivedAt` | Required timestamps |
 | `nextRetryAt` / `processedAt` | Nullable timestamps |
 | `lastErrorCode` | Nullable sanitized error code |
-| `processingHistory` | JSON array of `{at, outcome, code?}` appended under a row lock for each processing start/outcome; no raw payload |
+| `processingHistory` | JSON array of `{at, outcome, code?, reason?}` appended under a row lock for each processing start/outcome; `reason` is reserved for an operator-reviewed reopening, never a provider payload; no raw payload |
 
 Index `paymentId` and `(status, nextRetryAt)` for diagnosis/recovery queries. Only the event ID is unique. Do **not** make `(type, providerObjectId)` unique: separate failure events for one intent can be legitimate. Repeated semantic effects are prevented by the state machine and atomic transition versioning instead.
 
@@ -168,5 +168,5 @@ No lease holds a database transaction or connection open during HTTP. Constraint
 
 Stage 2 implements the first domain migration, `apps/api/prisma/migrations/20261119000100_payment_core/migration.sql`, with the three core tables, native enums, `timestamptz(3)`, bigint identity audit IDs, restrictive FKs, unique/indexed access paths and SQL checks. It includes only core Payment fields plus `providerOperationKey` and `provisioningStatus`; provider fields and the webhook reference are deferred to Stage 3 and serialize as null in Stage 2 responses. The event type and provisioning enums already contain their full contract values. Audit checks require creation/transition version pairing and permit null versions only on operational events.
 
-Stage 3 will add provider/receipt fields and constraints. Add SQL checks/indexes in reviewed migrations when needed. Migration application against empty PostgreSQL, FK restriction, concurrent insertion, null uniqueness and rollback are verified in Stage 2. Keep schema changes forward-oriented; do not edit applied migrations. Development startup deploys pending migrations before launching Nest; the guarded integration runner deploys them to the separate test database.
+Stage 3 implements these deferred fields in `20261119000200_stripe_integration`: all provider/lease/retry fields, the WebhookEvent table and nullable indexed audit FK. It safely defaults existing payments to zero attempts/null observations and preserves original creation snapshots and operation keys. A database trigger prevents replacing/clearing a linked intent or changing frozen parameters, amount/currency or the operation key. `metadataOperationKey` is additionally retained in the sanitized receipt for immutable-identity comparisons. T2–T5 rollback, real-pool races, lease takeover, recovery and constraint checks pass in the Stage 3 PostgreSQL suite. Add SQL checks/indexes in reviewed migrations when needed. Migration application against empty PostgreSQL, FK restriction, concurrent insertion, null uniqueness and rollback are verified in Stage 2. Keep schema changes forward-oriented; do not edit applied migrations. Development startup deploys pending migrations before launching Nest; the guarded integration runner deploys them to the separate test database.
 

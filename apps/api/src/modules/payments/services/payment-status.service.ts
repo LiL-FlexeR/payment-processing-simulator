@@ -9,11 +9,12 @@ import {
 @Injectable()
 export class PaymentStatusService {
   // Internal use only: the caller supplies its transaction and a validated observation.
-  // Stage 3 adds fenced ownership checks before calling this helper in T4.
+  // PaymentSyncService checks fenced ownership before invoking this helper.
   async apply(
     tx: Prisma.TransactionClient,
     paymentId: string,
     observation: ValidatedPaymentObservation,
+    audit: { webhookEventId?: string; details?: Record<string, string> } = {},
   ) {
     await tx.$queryRaw`SELECT id FROM payments WHERE id = ${paymentId}::uuid FOR UPDATE`;
     const payment = await tx.payment.findUnique({ where: { id: paymentId } });
@@ -32,7 +33,8 @@ export class PaymentStatusService {
         fromStatus: payment.status,
         toStatus: updated.status,
         statusVersion: updated.statusVersion,
-        details: { source: observation.source },
+        webhookEventId: audit.webhookEventId,
+        details: { source: observation.source, ...audit.details },
       },
     });
     return updated;

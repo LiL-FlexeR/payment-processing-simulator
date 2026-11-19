@@ -50,7 +50,7 @@ describe('durable creation replay after API process restart', () => {
   afterAll(async () => {
     await stop();
     await pool.query(
-      'TRUNCATE idempotency_records, payment_events, payments RESTART IDENTITY',
+      'TRUNCATE idempotency_records, payment_events, webhook_events, payments RESTART IDENTITY',
     );
     await pool.end();
   });

@@ -83,7 +83,7 @@ If there are multiple matches, inconsistent details, or no conclusive evidence, 
 
 ## Webhook Verification and Durable Processing
 
-Use snapshot events for the allowed [lifecycle event set](payment-lifecycle.md). Preserve the exact raw bytes using NestJS's [raw-body configuration](https://docs.nestjs.com/faq/raw-body); passing reserialized JSON to verification is invalid. Verify `Stripe-Signature` with the installed SDK and configured endpoint secret, with a 300-second timestamp tolerance and a synchronized system clock. The CLI listener secret and a dashboard endpoint secret are different configuration values.
+Use snapshot events for the allowed [lifecycle event set](payment-lifecycle.md). Preserve the exact raw bytes at NestJS's [raw-body boundary](https://docs.nestjs.com/faq/raw-body); passing reserialized JSON to verification is invalid. The implemented Nest/Express app disables the automatic parser and uses a bounded route-specific raw Buffer parser before the normal JSON parser, as recorded in the system overview. Verify `Stripe-Signature` with the installed SDK and configured endpoint secret, with a 300-second timestamp tolerance and a synchronized system clock. The CLI listener secret and a dashboard endpoint secret are different configuration values.
 
 Reject absent/invalid signatures, malformed supported event envelopes, unexpected account context, live-mode events or inconsistent event identities with 400. Reject bodies over 256 KiB with 413. No rejected event enters business processing. Never disable verification for tests or simulation. Use a separate fake-provider test secret only when fake mode is explicitly selected.
 

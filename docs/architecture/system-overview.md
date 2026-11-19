@@ -103,7 +103,7 @@ All exceptions pass through a NestJS filter implementing the [API error schema](
 
 ## Configuration Contract
 
-Stage 1 provides environment examples with placeholders and an opt-in generator for ignored local files; no real values belong in Git. Before Stage 3, provider calls are disabled and provider credentials are unnecessary; setting a provider or enabling simulations fails configuration validation.
+Stage 1 provides environment examples with placeholders and an opt-in generator for ignored local files; no real values belong in Git. Stage 3 requires explicit provider selection. Clean local setup chooses an explicitly enabled fake environment with random signing/bearer secrets and a distinct `simulator_fake` database; it needs no Stripe credentials. Existing ignored Stage 2 files are preserved and require the provider settings to be added. Stripe mode requires the test-only credentials/account/version below.
 
 | Setting | Requirement |
 | --- | --- |
@@ -112,12 +112,12 @@ Stage 1 provides environment examples with placeholders and an opt-in generator 
 | `API_PORT` / `WEB_ORIGIN` | Default planned API port 3001; exact local frontend origin on port 3000 |
 | `API_INTERNAL_ORIGIN` | Server-only fixed backend URL: host Next.js uses `http://localhost:3001`, containerized Next.js uses `http://api:3001`; no caller override |
 | `APP_INSTANCE_ID` | Stable environment UUID, persisted in Stripe metadata; must survive restarts |
-| `PAYMENT_PROVIDER` | `stripe` or `fake`; fake allowed only in development/test with simulation enabled |
+| `PAYMENT_PROVIDER` | Required `stripe` or `fake`; fake allowed only in development/test with explicit simulation enablement and a database ending `_fake` or `_test` |
 | `STRIPE_SECRET_KEY` | Server-only `sk_test_` key; reject live or unsupported key types at startup |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_` key for the browser; reject a live prefix |
 | `STRIPE_WEBHOOK_SECRET` | Server-only `whsec_` secret for the chosen listener/endpoint |
-| `STRIPE_ACCOUNT_ID` / `STRIPE_API_VERSION` | Expected account and explicit SDK-compatible stable API version |
-| `PAYMENT_RETURN_URL` | Fixed local payment-details origin/path; never supplied by the caller |
+| `STRIPE_ACCOUNT_ID` / `STRIPE_API_VERSION` | Expected account and exact stable `2026-11-18.endive`, matched to Stripe SDK 23.2.0 and the snapshot destination |
+| `PAYMENT_RETURN_URL` | Exact `WEB_ORIGIN/payments/return`, no query/fragment; used during confirmation, never supplied by the API caller |
 | `SIMULATION_ENABLED` / `SIMULATION_TOKEN` | False by default; opt-in plus server-only random bearer token |
 | `TEST_WEBHOOK_SECRET` | Separate fake-provider/test signing secret; never accepted in Stripe mode |
 
@@ -131,7 +131,7 @@ The MVP has no accounts and no complex authentication. Run it on loopback; bind 
 
 The webhook route is exempt from browser Origin checks and protected by Stripe signature verification and a 256 KiB body limit. Normal JSON requests have a 16 KiB limit. Apply modest request limits to writes and simulations; do not load test Stripe. Development routes require all three conditions: non-production environment, explicit enablement, and a constant-time checked bearer token. They are unregistered (404) in production, regardless of token or configuration. Never send the token to the browser or put it in a `NEXT_PUBLIC_` variable.
 
-Use NestJS's [raw body support](https://docs.nestjs.com/faq/raw-body) for the webhook verifier. Secrets come from local environment files ignored by Git or CI secret configuration. Example files contain placeholders only. No raw card data or complete provider objects are stored.
+Preserve raw bytes at the Nest/Express boundary, following the [raw-body requirement](https://docs.nestjs.com/faq/raw-body). The existing app uses `bodyParser:false` and safe parser-error normalization; Stage 3 adds a route-specific Express raw Buffer parser before other JSON parsing, with a 256 KiB limit and no decompression. The selected adapter verifies that exact Buffer before envelope parsing. Other routes retain the 16 KiB JSON parser. This keeps signature verification ahead of business parsing and preserves the separate body limits. Secrets come from local environment files ignored by Git or CI secret configuration. Example files contain placeholders only. No raw card data or complete provider objects are stored.
 
 ## Operational Limits
 
