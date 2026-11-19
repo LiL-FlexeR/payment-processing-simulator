@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "installedAt": "2026-11-19T14:55:12.949412+00:00",
+  "scope": "project",
+  "directory": ".agents/skills",
+  "skills": [
+    {
+      "name": "nestjs-best-practices",
+      "repository": "Kadajett/agent-nestjs-skills",
+      "sourcePath": "skills/nestjs-best-practices",
+      "commit": "3986e0cede33958e000f959031cbee0cd83c2941",
+      "sourceUrl": "https://github.com/Kadajett/agent-nestjs-skills/tree/3986e0cede33958e000f959031cbee0cd83c2941/skills/nestjs-best-practices",
+      "skillSha256": "9af2b33ca5b428637fe98e9b91e9f3ae064ddd359e96cdda7dc199d490b0a102",
+      "contentSha256": "077c77bffb04833e147bcd29d63dce015cd9f86305afd36b97f1d56d37e70d4d",
+      "fileCount": 43
+    },
+    {
+      "name": "prisma-orm-setup",
+      "repository": "prisma/skills",
+      "sourcePath": "prisma-orm-setup",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
+      "sourceUrl": "https://github.com/prisma/skills/tree/a6f192959cf43b08aa330fe1ffca090267215812/prisma-orm-setup",
+      "skillSha256": "26f935e748f4e16ad5900d75b30a7ef4ad395169a0add7c332fbb6d7df8eb769",
+      "contentSha256": "5798a4149187f402e228ff74dcc86df9ea9b41f4863cfafe0a5a86ccf28b2a4e",
+      "fileCount": 9
+    },
+    {
+      "name": "prisma-client-api",
+      "repository": "prisma/skills",
+      "sourcePath": "prisma-client-api",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
+      "sourceUrl": "https://github.com/prisma/skills/tree/a6f192959cf43b08aa330fe1ffca090267215812/prisma-client-api",
+      "skillSha256": "d033821313dc64b2b7dee120c6904b7d4457813e3b9c82d9584f7dee74baabe4",
+      "contentSha256": "532fb0e2e84e112ee352ddb4ac79a3368de8bdae3cd443be55931eb37d146d4a",
+      "fileCount": 9,
+      "compatibility": "Legacy Prisma Client API (skill version 7.9.1); not authoritative for Prisma 8."
+    },
+    {
+      "name": "docker-compose-patterns",
+      "repository": "docker/skills",
+      "sourcePath": "skills/docker-compose-patterns",
+      "commit": "caeee2024f7527d890a29dd1732b62a112f56d0e",
+      "sourceUrl": "https://github.com/docker/skills/tree/caeee2024f7527d890a29dd1732b62a112f56d0e/skills/docker-compose-patterns",
+      "skillSha256": "b43f4d71a18159de5868e0f1a352f0dd091bb81fe3ad29b24d79cffce6adfc4c",
+      "contentSha256": "29066554bdfd9947e2d0dfa8b15dbc5acc85d90c467b7299777d10634738c2dc",
+      "fileCount": 11
+    },
+    {
+      "name": "docker-build-strategies",
+      "repository": "docker/skills",
+      "sourcePath": "skills/docker-build-strategies",
+      "commit": "caeee2024f7527d890a29dd1732b62a112f56d0e",
+      "sourceUrl": "https://github.com/docker/skills/tree/caeee2024f7527d890a29dd1732b62a112f56d0e/skills/docker-build-strategies",
+      "skillSha256": "7ff24758ebacdf2b3010f75ec3fe4b6692661ca6202e813520b37d3975392b1c",
+      "contentSha256": "5ecd321ca1da38ad75f59ce107c095ff1ba341a0d7e8bbbcf987874decb1e188",
+      "fileCount": 12
+    },
+    {
+      "name": "supabase-postgres-best-practices",
+      "repository": "supabase/agent-skills",
+      "sourcePath": "skills/supabase-postgres-best-practices",
+      "commit": "c9be0e931b7930f7d02126d04774d904c381e7d7",
+      "sourceUrl": "https://github.com/supabase/agent-skills/tree/c9be0e931b7930f7d02126d04774d904c381e7d7/skills/supabase-postgres-best-practices",
+      "skillSha256": "ad65e776f45e761bafc609d3f506c77c1032225aa65e0c4c02f241b8071e5855",
+      "contentSha256": "a714d433362542f2d52e8b7958d1691c49fa4f43c9645c9a647895fb3ca85f92",
+      "fileCount": 36
+    },
+    {
+      "name": "shadcn",
+      "repository": "shadcn-ui/ui",
+      "sourcePath": "skills/shadcn",
+      "commit": "f50887ae68d0fdcbfbe86b57be08af94a4c88a68",
+      "sourceUrl": "https://github.com/shadcn-ui/ui/tree/f50887ae68d0fdcbfbe86b57be08af94a4c88a68/skills/shadcn",
+      "skillSha256": "93951e5e83f616a3e046491c00d770bd54c0a64164706cd1191822a233d27592",
+      "contentSha256": "221a317e591a76c27ba2801b60048ef05596d3550c6d8daf70a8016086b00d07",
+      "fileCount": 21
+    },
+    {
+      "name": "frontend-design",
+      "repository": "anthropics/skills",
+      "sourcePath": "skills/frontend-design",
+      "commit": "e4bb5d960d87126ff3b3a8af1a104b7db67560ba",
+      "sourceUrl": "https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/frontend-design",
+      "skillSha256": "d91970639e9f5c37682ac7ab60094d35f1c7c1f38d731bd56396563aee10c1d3",
+      "contentSha256": "7e9c2af00fd5b3144f49ce6fb1b16037b392ab9c2f049423b0b6114d99381ba2",
+      "fileCount": 2
+    },
+    {
+      "name": "vercel-react-best-practices",
+      "repository": "vercel-labs/agent-skills",
+      "sourcePath": "skills/react-best-practices",
+      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills/tree/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/react-best-practices",
+      "skillSha256": "71ed7794962fa6e803ee83030517b5b93a9f70fbfeb431ec4535c5480a8d8355",
+      "contentSha256": "e3f2294574b469c7c198373a443a86571012769d0bbeed68854bd55642ec0d7b",
+      "fileCount": 76
+    },
+    {
+      "name": "vercel-composition-patterns",
+      "repository": "vercel-labs/agent-skills",
+      "sourcePath": "skills/composition-patterns",
+      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills/tree/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/composition-patterns",
+      "skillSha256": "e38e0eaa609316b10423a9a138ed95e35099accd3f735585295c8a8f165c28a3",
+      "contentSha256": "646f870906914c3787efa7403ec4716dfddf78fc17a12ec1f0556caf2143ac66",
+      "fileCount": 14
+    },
+    {
+      "name": "web-design-guidelines",
+      "repository": "vercel-labs/agent-skills",
+      "sourcePath": "skills/web-design-guidelines",
+      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills/tree/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/web-design-guidelines",
+      "skillSha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f",
+      "contentSha256": "f3bc47f890f42a44db1007ab390709ec368e4b8c089baee6b0007182236ac474",
+      "fileCount": 1
+    },
+    {
+      "name": "modern-web-guidance",
+      "repository": "GoogleChrome/modern-web-guidance",
+      "sourcePath": "skills/modern-web-guidance",
+      "commit": "64a6d708f5a43f2cd3fde5d4d7db3905ba1bdf65",
+      "sourceUrl": "https://github.com/GoogleChrome/modern-web-guidance/tree/64a6d708f5a43f2cd3fde5d4d7db3905ba1bdf65/skills/modern-web-guidance",
+      "skillSha256": "1292f0ce14794a5bc49af58e99d5f6d4edf10acd9472cade94ab0c5590892716",
+      "contentSha256": "856a62f4c85a37fee26df53c10731f49fe7b1937110e2b6b7e5b15531971fa04",
+      "fileCount": 211
+    },
+    {
+      "name": "playwright-cli",
+      "repository": "microsoft/playwright-cli",
+      "sourcePath": "skills/playwright-cli",
+      "commit": "c872a33cec77fa03c28fa7c6d1ad99d15d04ce42",
+      "sourceUrl": "https://github.com/microsoft/playwright-cli/tree/c872a33cec77fa03c28fa7c6d1ad99d15d04ce42/skills/playwright-cli",
+      "skillSha256": "1c4c34000f6102ee71fe91bf25351a221f7da37f48f2d556e1756f66e17d356f",
+      "contentSha256": "c57c0994030f78ec26714ea4681c5930f7481bed8af47440d846b1f2aae3b801",
+      "fileCount": 11
+    },
+    {
+      "name": "github-actions-hardening",
+      "repository": "github/awesome-copilot",
+      "sourcePath": "skills/github-actions-hardening",
+      "commit": "1683f50e94c9fd489191f73d7c8f7e2bd871bd0c",
+      "sourceUrl": "https://github.com/github/awesome-copilot/tree/1683f50e94c9fd489191f73d7c8f7e2bd871bd0c/skills/github-actions-hardening",
+      "skillSha256": "31a8e7483d978e6267941edefebbe42aaa946bb3d43c9095aa3db343d4a8ff06",
+      "contentSha256": "1e86f0d3a4bfb96cbd0909cb6349b39b3aa32e5d900374d6e2366be14d1fc190",
+      "fileCount": 6
+    },
+    {
+      "name": "impeccable",
+      "repository": "pbakaus/impeccable",
+      "sourcePath": ".agents/skills/impeccable",
+      "commit": "b49177d32788f2dc585c42831d845dacf1ebed2c",
+      "sourceUrl": "https://github.com/pbakaus/impeccable/tree/b49177d32788f2dc585c42831d845dacf1ebed2c/.agents/skills/impeccable",
+      "skillSha256": "dc7c49c1ad645d0ab8737e852419bba0a9db27cdceebad3630e88d5f772813be",
+      "contentSha256": "c6b0c8ad5cbe6a3c3c3c7c600bec79dedb4937abe018194c5dc639f4ec4e2509",
+      "fileCount": 70
+    }
+  ],
+  "impeccableEngine": {
+    "version": "0.1.27",
+    "platform": "linux-x64",
+    "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.27/impeccable-linux-x64",
+    "sha256": "41d66e945bcdfc560005b61ad0b6b2312b124890039262f2e63322ef2709ccfd",
+    "bytes": 26051472
+  },
+  "hooksEnabled": false
+}
