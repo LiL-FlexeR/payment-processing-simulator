@@ -2,7 +2,7 @@
 
 ## Objective
 
-Build a compact dashboard that makes test payment outcomes, duplicate prevention and recovery easy to demonstrate. This stage has not started.
+Build a compact dashboard that makes test payment outcomes, duplicate prevention and recovery easy to demonstrate. Implemented and deterministically verified on 2026-11-19. The developer explicitly deferred manual real Stripe Payment Element verification to Stage 5 because test credentials are unavailable; this does not claim actual Stripe behavior is verified.
 
 ## Prerequisites
 
@@ -51,27 +51,27 @@ Do not recommend the retired generic Next.js skill or specialized Cache Componen
 
 ## Implementation Tasks
 
-- [ ] Create the dashboard shell with a persistent test-mode/fake-mode indicator and navigation between list and details.
-- [ ] Pin compatible Axios/TanStack Query versions; add the typed browser client, domain request functions and client QueryProvider with explicit retry/refetch settings.
-- [ ] Group payment/scenario query and mutation hooks under `src/api/hooks/<module>`; invalidate/refetch affected projections without optimistic financial-state updates.
-- [ ] Apply component folder/`index.tsx` conventions, page-local components/hooks and shadcn aliases; keep global types/utilities/hooks limited to actual shared scope.
-- [ ] Apply the supplied design tokens to the shell and shadcn/ui primitives; document semantic mappings and resolved export discrepancies before building the remaining screens.
-- [ ] Build the creation form with exact-money validation, currency select, accessible errors and retained logical-request key.
-- [ ] Build the paginated payment list with status filter, loading/empty/error states and details navigation.
-- [ ] Build details with local/provider status, operational error/retry timing, provider ID and creation/update/sync times.
-- [ ] Build a newest-first audit timeline with safe error codes and webhook correlations; never expose raw provider payloads.
-- [ ] Implement confirmation-session fetching, Stripe Payment Element mounting/confirmation and retry after decline on the existing intent.
-- [ ] Keep confirmation-session results out of QueryCache/MutationCache by invoking the typed request from a payment-local hook and retaining the secret only in component-local memory.
-- [ ] Handle configured return navigation by fetching/synchronizing details, without trusting URL query claims of success.
-- [ ] Add bounded local polling and explicit synchronize/recover actions; avoid automatic card confirmation retries.
-- [ ] Implement normal API proxy allowlists, no-store handling and separate guarded server-only simulation forwarding.
-- [ ] Add the conditional Simulation module and HTTP scenario contracts; verify they are unregistered in production.
-- [ ] Implement sequential duplicate and ten-request race demonstrations through the actual payment HTTP route and database counts.
-- [ ] Add scoped one-shot rollback/response-timeout faults with 60-second expiry and immutable signed-event replay.
-- [ ] Add fake-only fixed confirmation scenarios that use the same signature verifier and transaction path.
-- [ ] Show run observations, response statuses, unique payment/event counts and recovery results as evidence, including failed assertions.
-- [ ] Add initial deterministic Playwright flows and guard/signature integration tests.
-- [ ] Verify keyboard/focus/error announcement behavior and narrow/wide layouts; update demo instructions with real steps.
+- [x] Create the dashboard shell with a persistent test-mode/fake-mode indicator and navigation between list and details.
+- [x] Pin compatible Axios/TanStack Query versions; add the typed browser client, domain request functions and client QueryProvider with explicit retry/refetch settings.
+- [x] Group payment/scenario query and mutation hooks under `src/api/hooks/<module>`; invalidate/refetch affected projections without optimistic financial-state updates.
+- [x] Apply component folder/`index.tsx` conventions, page-local components/hooks and shadcn aliases; keep global types/utilities/hooks limited to actual shared scope.
+- [x] Apply the supplied design tokens to the shell and shadcn/ui primitives; document semantic mappings and resolved export discrepancies before building the remaining screens.
+- [x] Build the creation form with exact-money validation, currency select, accessible errors and retained logical-request key.
+- [x] Build the paginated payment list with status filter, loading/empty/error states and details navigation.
+- [x] Build details with local/provider status, operational error/retry timing, provider ID and creation/update/sync times.
+- [x] Build a newest-first audit timeline with safe error codes and webhook correlations; never expose raw provider payloads.
+- [x] Implement confirmation-session fetching, Stripe Payment Element mounting/confirmation and retry after decline on the existing intent.
+- [x] Keep confirmation-session results out of QueryCache/MutationCache by invoking the typed request from a payment-local hook and retaining the secret only in component-local memory.
+- [x] Handle configured return navigation by fetching/synchronizing details, without trusting URL query claims of success.
+- [x] Add bounded local polling and explicit synchronize/recover actions; avoid automatic card confirmation retries.
+- [x] Implement normal API proxy allowlists, no-store handling and separate guarded server-only simulation forwarding.
+- [x] Add the conditional Simulation module and HTTP scenario contracts; verify they are unregistered in production.
+- [x] Implement sequential duplicate and ten-request race demonstrations through the actual payment HTTP route and database counts.
+- [x] Add scoped one-shot rollback/response-timeout faults with 60-second expiry and immutable signed-event replay.
+- [x] Add fake-only fixed confirmation scenarios that use the same signature verifier and transaction path.
+- [x] Show run observations, response statuses, unique payment/event counts and recovery results as evidence, including failed assertions.
+- [x] Add initial deterministic Playwright flows and guard/signature integration tests.
+- [x] Verify keyboard/focus/error announcement behavior and narrow/wide layouts; update demo instructions with real steps.
 
 ## Expected Files and Modules
 
@@ -93,17 +93,17 @@ Verify API-hook retry/polling limits, retained idempotency keys after a lost res
 
 ## Acceptance Criteria
 
-- [ ] A developer can create, find and inspect a payment and its audit timeline without raw database queries.
-- [ ] Monetary input/formatting preserves exact integer values; invalid precision and bounds are explained accessibly.
-- [ ] A decline is visibly retryable and can later succeed on the same payment/intent; terminal states cannot reopen confirmation.
-- [ ] Duplicate/concurrent scenario reports prove one local payment and one creation event.
-- [ ] A duplicate signed event creates no second financial transition; a new event's injected rollback returns failure and later recovers.
-- [ ] A response timeout is shown as uncertainty/operational failure and recovers by observing the same provider object.
-- [ ] The browser receives neither simulation token nor raw card fields/client secrets in logs, URLs or persistent storage.
-- [ ] Production/disabled simulation routes are absent and fake confirmation is unavailable in Stripe mode.
-- [ ] Initial browser/API checks pass; keyboard navigation and responsive details are verified.
-- [ ] Dashboard styling follows the supplied design references and named tokens, with any accessibility/density adaptations documented and visually verified.
-- [ ] Source folders, component entry points, API-hook grouping and DI-backed simulation paths follow the structure contract; no credentials enter client query caches.
+- [x] A developer can create, find and inspect a payment and its audit timeline without raw database queries.
+- [x] Monetary input/formatting preserves exact integer values; invalid precision and bounds are explained accessibly.
+- [x] A decline is visibly retryable and can later succeed on the same payment/intent; terminal states cannot reopen confirmation.
+- [x] Duplicate/concurrent scenario reports prove one local payment and one creation event.
+- [x] A duplicate signed event creates no second financial transition; a new event's injected rollback returns failure and later recovers.
+- [x] A response timeout is shown as uncertainty/operational failure and recovers by observing the same provider object.
+- [x] The browser receives neither simulation token nor raw card fields/client secrets in logs, URLs or persistent storage.
+- [x] Production/disabled simulation routes are absent and fake confirmation is unavailable in Stripe mode.
+- [x] Initial browser/API checks pass; keyboard navigation and responsive details are verified.
+- [x] Dashboard styling follows the supplied design references and named tokens, with any accessibility/density adaptations documented and visually verified.
+- [x] Source folders, component entry points, API-hook grouping and DI-backed simulation paths follow the structure contract; no credentials enter client query caches.
 
 ## Definition of Done
 
@@ -117,3 +117,43 @@ Authentication systems, multi-tenancy, advanced charting, a general design syste
 
 Depends on Stage 3's complete provider and webhook contracts. Supplies a demonstrable application and initial Playwright suite for [Stage 5](05-testing-and-polish.md). Optional skill installation is never required.
 
+
+
+## Verification Evidence — 2026-11-19
+
+Stage 4 implementation and deterministic acceptance are complete. The developer explicitly approved moving the real hosted Payment Element check to Stage 5 on 2026-11-19. The [Stage 5 follow-up](05-testing-and-polish.md#deferred-real-provider-browser-verification) tracks this together with Stage 3’s still-unverified real Stripe smoke. No optional Codex skill was installed, synchronized or enabled; the existing reference exports remain unchanged.
+
+| Check | Actual result |
+| --- | --- |
+| Backend unit/API tests (`npm test`) | 159 passed across 7 suites, including production/disabled route absence and scoped fault expiry |
+| PostgreSQL integration (`npm run test:integration`) | 69 passed across 5 suites using real PostgreSQL 17.9 on the isolated `_test` database |
+| Browser/money/query-policy checks (`npm run test:e2e`) | 9 passed, serial Chromium with real API/PostgreSQL and signed fake fixtures |
+| Typecheck / ESLint / formatting | Passed with normalized component entry-point imports |
+| API build / web production build | Passed; web used the documented `--webpack` fallback after this environment rejected a Turbopack worker socket |
+| Production and disabled Next.js proxy HTTP checks | All four development routes returned 404/no-store; scenario controls were absent |
+| Visual review | Actual ledger/form/details/history/scenario captures at 1440 and 390 px; no page-level horizontal overflow, long IDs wrap, the ledger remains locally scrollable |
+| Keyboard/accessibility | Invalid exact money focuses its input, `aria-invalid` and described errors agree; Tab reaches currency, visible focus is retained, arrow keys scroll the named table region |
+| Local Compose runtime | API and PostgreSQL healthy after rebuild; existing legacy development data preserved in its original database and the application uses a separate `simulator_fake` database |
+| Real Stripe / hosted Payment Element | **SKIPPED / DEFERRED** by explicit developer approval; no credentials available, no actual Stripe behavior claimed verified |
+
+Browser coverage verifies exact 27.31 EUR creation; current details and newest-first history; fake decline then success on the same intent; a real committed create response discarded at the transport boundary followed by same-key/body replay **after that payment has already succeeded**; two sequential/ten concurrent request reports; a new signed event returning 503 on injected rollback then two successful signed replay deliveries with one transition; provider response loss followed by same-operation recovery; exact foreign Host/Origin rejection; query/mutation cache inspection excluding session secrets; no credential persistence or real Stripe requests; untrusted return outcome claims ignored; and status-preserving list pagination.
+
+The PostgreSQL scenario tests assert one payment/creation event, unchanged financial state and no transition after rollback, unfinished receipt recovery, provider object identity after response loss, immutable replay rejection, exact signature verification, active-lease exclusion and fake-confirmation rejection in Stripe mode. Existing tests also verify raw bytes, live/foreign event rejection, state machine/fencing/cutoff and audit atomicity. The restart fixture now clears its guarded test data before running, so an earlier E2E run does not change its counts. Do not run the two PostgreSQL suites concurrently or regenerate Prisma while another check builds the API.
+
+Captured files are generated by `apps/web/test/dashboard.spec.ts` under the ignored `apps/web/test-results/` directory (`ledger-1440.png`, `ledger-390.png`, `details-1440.png`, `details-390.png`). These are actual runtime screenshots, not fabricated references. Playwright traces are off to avoid recording confirmation-session response secrets. The mechanical design detector returned an empty finding list; the rendered comparison also checked the supplied visual rules directly.
+
+## Application Mapping and Accessibility Adaptations
+
+The Stage 1 semantic mapping is preserved: white canvas/card, navy foreground, indigo actions/focus, deep-violet filled-action hover, steel muted text, slate input boundaries, frost dividers and periwinkle status tags. Named 4px button/input/card radii take precedence over the reconstructed pill-button example; only tags use pills. No shadows, extra status palette or font download was added. Body/control text uses the supplied fallback stack at weight 400 for operational readability; light headings retain the reference direction.
+
+Dashboard groups use the supplied 24/32/40/48px roles instead of 96px marketing gaps. The detail grid stacks at narrow widths; IDs and webhook correlations wrap. Tables retain columns and exact tabular amounts inside an explicitly named, keyboard-focusable horizontal scroll region. Inputs and ordinary actions have 48px targets, compact pagination/refresh actions retain visible focus, and all financial states have text and line icons. Errors are linked to inputs and announced after interaction, with focus moved after a failed submit. Skeleton motion respects reduced motion. Stripe Appearance reads the same computed semantic tokens rather than defining another palette.
+
+## Implemented Boundaries and Demo
+
+See the [README demo](../../../README.md#stage-4-dashboard-demo) for real steps and commands. Server-only web environment values must match API mode/token; clean `setup:env` generates them together and preserves existing ignored files. Normal proxy methods/paths/query fields are allowlisted with no-store; POST requires the exact local Origin and Host. Development forwarding is separate and injects the bearer only on the server. Normal operation fixes the local API port at 3001; the explicit server-only E2E flag reserves 3102.
+
+`SimulationModule.register()` registers no controllers/instrumentation in production or disabled mode; its guard independently rechecks validated configuration and timing-safe bearer equality. Payments consumes an optional neutral instrumentation token through DI; it does not depend on the Simulation feature or import a concrete provider. The global feature binding avoids a circular import. The orchestrator sends real HTTP requests to its configured loopback API, reads PostgreSQL counts, and signs only provider-owned immutable test fixtures after matching the receipt and local payment. It never accepts arbitrary target URLs/raw events/secrets/statuses. The fake confirmation is a fixed provider capability absent from Stripe, shares the payment lease, and releases before the signed webhook HTTP request. Local financial updates still go exclusively through the normal synchronization transaction.
+
+The response-timeout fault discards a successful create/retrieve result before linkage/apply. The rollback fault throws inside T4 after its writes and before commit, so financial status/audit/receipt completion all roll back together. Both are one-shot, payment-scoped, expire in 60 seconds and do not persist across restart. Session results bypass TanStack caches; every other affected projection is invalidated/refetched with no optimistic financial changes, no automatic POST retries, and bounded two-second/60-second detail polling. Fake fixtures/objects remain process-local as documented in Stage 3.
+
+For real provider return handling, only a local UUID enters a short-lived HttpOnly/SameSite cookie; outcome query claims are ignored. `/payments/return` clears that cookie and redirects to clean details for sync, with no-store/no-referrer and incoming URL logging disabled. The application never puts a client secret in its configured return URL. Stripe-controlled redirects may add provider query parameters; verifying that real hosted flow and its strict URL-secrecy behavior remains part of the explicitly deferred check, not a claim established by the fake suite.

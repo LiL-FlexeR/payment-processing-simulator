@@ -708,7 +708,7 @@ describe('Payment Core with real PostgreSQL and concurrent HTTP', () => {
       .expect(200);
     expect(
       Object.keys(response.body.paths)
-        .filter((path) => path.includes('payments'))
+        .filter((path) => path.startsWith('/api/v1/payments'))
         .sort(),
     ).toEqual([
       '/api/v1/payments',

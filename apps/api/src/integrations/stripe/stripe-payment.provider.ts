@@ -154,4 +154,10 @@ export class StripePaymentProvider implements PaymentProvider {
       throw normalizeStripeError(error);
     }
   }
+  signTestEvent(raw: Buffer) {
+    return this.client!.webhooks.generateTestHeaderString({
+      payload: raw.toString('utf8'),
+      secret: this.config.values.stripeWebhookSecret,
+    });
+  }
 }

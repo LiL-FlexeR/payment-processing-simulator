@@ -110,6 +110,7 @@ Stage 1 provides environment examples with placeholders and an opt-in generator 
 | `NODE_ENV` | `development`, `test`, or `production`; production always disables simulation/fake mode |
 | `DATABASE_URL` | PostgreSQL connection; `db:5432` from the API container, separate host-tool settings and development/test databases |
 | `API_PORT` / `WEB_ORIGIN` | Default planned API port 3001; exact local frontend origin on port 3000 |
+| `SIMULATOR_E2E` | Server-only opt-in used by the serial browser runner; changes the fixed loopback API port from 3001 to the reserved 3102, never derived from browser input |
 | `API_INTERNAL_ORIGIN` | Server-only fixed backend URL: host Next.js uses `http://localhost:3001`, containerized Next.js uses `http://api:3001`; no caller override |
 | `APP_INSTANCE_ID` | Stable environment UUID, persisted in Stripe metadata; must survive restarts |
 | `PAYMENT_PROVIDER` | Required `stripe` or `fake`; fake allowed only in development/test with explicit simulation enablement and a database ending `_fake` or `_test` |

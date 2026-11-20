@@ -2,7 +2,7 @@
 
 A test-mode payment application in development that demonstrates reliable backend engineering: payment lifecycles, Stripe integration, idempotent requests, database consistency, verified webhooks, and recovery from failures.
 
-**Project status: Stages 1–3 complete. Stage 3’s deterministic acceptance is verified; real Stripe smoke execution is deferred by the developer to Stage 5 until test credentials are available. Actual Stripe behavior is not yet fully verified.** The workspace, health API, frontend shell and local Payment Core now exist: PostgreSQL persistence, idempotent creation, paginated reads and an internal audited state machine. The Stripe adapter, signed fake, confirmation/sync endpoints and durable webhook recovery now exist. Dashboard workflows and CI remain planned for Stages 4–5. No deployed environment exists.
+**Project status: Stages 1–4 complete with deterministic acceptance verified. The developer explicitly deferred real Stripe smoke and manual Payment Element verification to Stage 5 until test credentials are available. Actual Stripe behavior is not yet fully verified.** The dashboard now supports exact-money creation, paginated payments, details/history, retryable declines, confirmation sessions, signed-event replay, request races and one-shot failure/recovery demonstrations. Stage 5 CI/runtime hardening is not started. No deployed environment exists.
 
 ## Problem Statement
 
@@ -53,7 +53,10 @@ Stage 1 pins stable package versions in the manifests and the single root lockfi
 | Jest / ts-jest / Supertest | 30.5.2 / 29.4.15 / 7.2.2 | One unit/API runner; Jest ESM uses Node's experimental VM-module flag |
 | Swagger / Express | 12.1.2 / 5.3.0 | Nest 12-compatible DTO documentation; explicitly declared Express for bounded JSON parsing |
 | Tailwind CSS / PostCSS plugin | 4.3.5 | Supplied CSS variables and `@theme` exports imported directly |
-| shadcn primitives / Base UI | Button and Badge / `@base-ui/react` 1.9.0 | Official base-nova source adapted to the supplied theme and folder entry points |
+| shadcn primitives / Base UI | Button, Badge, Input, NativeSelect, Field, Table and feedback primitives / `@base-ui/react` 1.9.0 | Official base-nova source adapted to the supplied theme and folder entry points |
+| Browser API / query state | Axios 1.21.1 / TanStack React Query 5.108.1 | Typed same-origin requests; no automatic retries or persistent query cache |
+| Stripe browser libraries | React Stripe.js 7.1.0 / Stripe.js 10.3.0 | Lazy Payment Element; fake mode never loads Stripe.js |
+| Browser tests / icons | Playwright 1.65.1 / Lucide React 0.577.0 | Real API/PostgreSQL and signed fake fixtures; consistent line icons |
 | UI class helpers | CVA 0.7.1, clsx 2.1.1, tailwind-merge 3.7.0 | Shared `cn()` recognizes the reference's custom typography roles |
 | ESLint / TypeScript ESLint / Prettier | 10.15.0 / 8.73.0 / 3.10.1 | Flat config, Next core web vitals plugin 16.4.6 |
 | Docker / Compose verification environment | CLI 29.9.3, engine 29.5.3 / Compose 5.1.4 | Compose 2.32+ required for Watch `initial_sync` |
@@ -101,7 +104,7 @@ payment-processing-simulator/
 └── .github/workflows/        # Planned in Stage 5; not created yet
 ```
 
-Stage 1 creates the two applications and infrastructure; Stage 2 adds `modules/payments`, shared HTTP/error handling and the first domain migration. The workflow directory remains planned. `skills.md` remains absent; no catalog or additional optional skills were installed during Stages 1–3.
+Stage 1 creates the two applications and infrastructure; Stage 2 adds `modules/payments`, shared HTTP/error handling and the first domain migration. The workflow directory remains planned. `skills.md` remains absent; no catalog or additional optional skills were installed during Stages 1–4.
 
 The [source structure contract](docs/architecture/project-structure.md) defines DI boundaries, the backend's one-versus-many folder rule, provider adapters under `integrations`, page-local frontend components and API hooks, and component folders with `index.tsx` entry points. Both applications use a `src` directory. Payments has one root controller, feature services under `services/`, DTOs and pure state/validation helpers; Stage 3 adds provider-neutral bindings, Stripe/fake integrations, lease/sync services and the Webhooks module.
 
@@ -143,11 +146,11 @@ In another terminal:
 npm run dev:web
 ```
 
-Open [the frontend shell](http://localhost:3000). Its server reads the API's published loopback port and links to an allowlisted, same-origin readiness proxy. The shell is dynamic and reports actual process/database observations; it does not process payments. The API endpoints are [liveness](http://localhost:3001/api/v1/health/live) and [readiness](http://localhost:3001/api/v1/health/ready).
+Open [the payment dashboard](http://localhost:3000/payments). The server proxies allowlisted payment/health requests to the fixed loopback API origin. The persistent indicator identifies fake or Stripe test mode. The API endpoints are [liveness](http://localhost:3001/api/v1/health/live) and [readiness](http://localhost:3001/api/v1/health/ready).
 
 `setup:env` creates ignored `.env`, `apps/api/.env`, `apps/api/.env.test` and `apps/web/.env.local` from committed placeholder examples, using a generated URL-safe random password, stable instance UUID, and distinct random fake signing/bearer secrets. Clean setup uses `simulator_fake`; existing ignored files are preserved and need the Stage 3 provider settings added manually. It refuses to overwrite existing files. Keep the instance UUID across normal restarts. For manual configuration, copy the corresponding examples and replace every placeholder; keep the root/API/test passwords consistent. These local files are excluded from Docker's build context.
 
-The API runs inside Docker and connects to `db:5432`. Host Prisma tools use `127.0.0.1:5432`; integration tests use the distinct `simulator_test` database on `127.0.0.1:5433`. `API_INTERNAL_ORIGIN` and `WEB_ORIGIN` are server-only Next.js settings; the proxy rejects untrusted Host/Origin values and allows only the two health GET routes. Stage 3 enables explicit backend provider sessions/synchronization. Fake mode requires a separate database ending `_fake`/`_test`; simulation HTTP controls and browser payment workflows remain Stage 4 work.
+The API runs inside Docker and connects to `db:5432`. Host Prisma tools use `127.0.0.1:5432`; integration tests use the distinct `simulator_test` database on `127.0.0.1:5433`. `API_INTERNAL_ORIGIN` and `WEB_ORIGIN` are server-only Next.js settings; the proxy rejects untrusted Host/Origin values and allows only documented health/payment methods and paths. Development handlers inject the server-only simulation token after exact Host/Origin validation. Fake mode requires a separate database ending `_fake`/`_test`. Existing web environment files must add `PAYMENT_PROVIDER`, `SIMULATION_ENABLED` and the **same server-only** `SIMULATION_TOKEN` as the API; copy the names from `apps/web/.env.example`. Never use a `NEXT_PUBLIC_` token.
 
 Compose waits for database health before starting the API. The API's development script runs `prisma migrate deploy` before Nest, applying pending reviewed migrations on both new and existing databases. `npm run db:migrate` applies the same migrations from the host using `apps/api/.env` when needed. Do not use `db push` to bypass SQL checks. `npm run dev` enables Watch: source changes sync without replacing container dependencies; manifest, lockfile, Prisma, TypeScript and Docker configuration changes rebuild the image and run `npm ci` again. `npm run infra:up` starts/rebuilds the same services in the background without Watch. `npm run infra:down` stops/removes development containers while preserving the named database volume. Do not add `--volumes` when stopping normal development.
 
@@ -164,7 +167,7 @@ npm test
 npm run build
 ```
 
-If this managed environment rejects Turbopack's worker socket, the unchanged web shell can be verified with `npm run build --workspace @simulator/web -- --webpack`; the API build remains `npm run build --workspace @simulator/api`. The default build script is preserved. This environment limitation also occurred in Stage 1's follow-up verification.
+If this managed environment rejects Turbopack's worker socket, the dashboard can be verified with `npm run build --workspace @simulator/web -- --webpack`; the API build remains `npm run build --workspace @simulator/api`. The default build script is preserved. This environment limitation also occurred in Stage 1's follow-up verification.
 
 For real-PostgreSQL acceptance tests, start the isolated test service first:
 
@@ -180,7 +183,7 @@ The Stage 2 runtime-only audit (`npm audit --omit=dev`) reports zero vulnerabili
 
 ## Local Payment API
 
-With Compose running, open [Swagger](http://localhost:3001/api/docs) or its [OpenAPI JSON](http://localhost:3001/api/docs-json). Documentation is not registered in production. Create/list/detail/events still perform local database operations only. Stage 3 adds confirmation-session, explicit sync and the signed webhook route; the web shell proxy still exposes health only until Stage 4.
+With Compose running, open [Swagger](http://localhost:3001/api/docs) or its [OpenAPI JSON](http://localhost:3001/api/docs-json). Documentation is not registered in production. Create/list/detail/events still perform local database operations only. Confirmation-session, explicit sync and the signed webhook route are implemented. Stage 4 adds guarded simulation orchestration; the browser proxy exposes payment/session/sync/events and fixed development scenarios, never arbitrary webhook JSON or target URLs.
 
 ```bash
 curl -i http://localhost:3001/api/v1/payments \
@@ -198,19 +201,19 @@ Creation atomically commits one payment, immutable response record and version-1
 
 ## Design Integration
 
-The web shell imports `docs/design/variables.css` and the Tailwind v4 `theme.css` without changing either supplied file. Global CSS contains those imports, semantic theme mappings and base element styles. Shell/page layout uses Tailwind utilities in JSX, and shared controls use shadcn Button/Badge with local variants. Component source lives in folder-based `index.tsx` files; `components.json` records the official Base UI/nova registry setup and source aliases. Dashboard workflows and additional primitives remain Stage 4 work.
+The web shell imports `docs/design/variables.css` and the Tailwind v4 `theme.css` without changing either supplied file. Global CSS contains those imports, semantic theme mappings and base element styles. Shell/page layout uses Tailwind utilities in JSX, and shared controls use shadcn Button/Badge with local variants. Component source lives in folder-based `index.tsx` files; `components.json` records the official Base UI/nova registry setup and source aliases. Stage 4 adds normalized folder-based Input, NativeSelect, Field/Label, Table, Alert, Empty, Skeleton and Separator primitives. The CLI’s erroneous `cn` package import was replaced with the existing `@/utils/cn`; no duplicate flat primitives remain.
 
-The shell keeps the white canvas, navy text, small indigo actions, fine frost dividers, flat surfaces, 4px component radii and tabular numerals. Pills apply only to the test-mode tag. The documented fallback font stack is used without fetching fonts. Body text uses weight 400 and 1.5 line-height for operational readability; muted text maps to steel for contrast. Hovering a filled action uses the supplied deep violet instead of the lighter indigo-hover to retain white-text contrast. Input boundaries map to slate for a visible control edge; decorative dividers retain frost. There are no input controls yet. Responsive spacing comes from the supplied scale, with a 48px target for actions and stacked status rows on narrow screens. Dashboard components remain out of scope.
+The shell keeps the white canvas, navy text, small indigo actions, fine frost dividers, flat surfaces, 4px component radii and tabular numerals. Pills apply to mode/status/version tags. The documented fallback font stack is used without fetching fonts. Body text uses weight 400 and 1.5 line-height for operational readability; muted text maps to steel for contrast. Hovering a filled action uses the supplied deep violet instead of the lighter indigo-hover to retain white-text contrast. Input boundaries map to slate for a visible control edge; decorative dividers retain frost. Inputs/selects retain 4px radii, 48px controls and visible keyboard focus. The 96px marketing section gap is adapted to 24/32/40/48px dashboard groups; 14px table/detail text retains tabular numerals. The ledger scrolls inside a named keyboard-focusable region at narrow widths; details stack and long IDs wrap. Status/error text and line icons convey meaning without extra status colors. Stripe Appearance variables are resolved from the same CSS roles at mount. Source exports remain unchanged.
 
 ## Development Workflow
 
-Follow the [five-stage roadmap](docs/features/ROADMAP.md) in order. Stages 1 and 2 passed their acceptance criteria on 2026-11-19 ([setup evidence](docs/features/stages/01-project-setup.md#verification-evidence--2026-11-19), [Payment Core evidence](docs/features/stages/02-payment-core.md#verification-evidence--2026-11-19)); Stage 3 is complete and deterministically verified; the developer explicitly deferred real Stripe smoke execution to Stage 5 until credentials are available. Stage 4 dashboard workflows and Stage 5 runtime/CI hardening remain not started. Update contracts alongside implemented changes.
+Follow the [five-stage roadmap](docs/features/ROADMAP.md) in order. Stages 1 and 2 passed their acceptance criteria on 2026-11-19 ([setup evidence](docs/features/stages/01-project-setup.md#verification-evidence--2026-11-19), [Payment Core evidence](docs/features/stages/02-payment-core.md#verification-evidence--2026-11-19)); Stage 3 is complete and deterministically verified; the developer explicitly deferred real Stripe smoke execution to Stage 5 until credentials are available. Stage 4 is deterministically verified; real Payment Element verification is explicitly deferred to Stage 5. Stage 5 runtime/CI hardening remains not started. Update contracts alongside implemented changes.
 
 ## Testing Strategy
 
 Use Jest across backend unit and integration tests, avoiding a second unit-test runner. Supertest exercises the actual NestJS HTTP pipeline. Integration tests use real PostgreSQL with isolated test data; an in-memory database cannot prove uniqueness and transaction behavior.
 
-Playwright will exercise the dashboard against a separately selected deterministic fake provider and test database. The fake will still emit signed webhook fixtures through the real verification endpoint. It is allowed only in development/test with explicit simulation enablement. The separate Stage 3 opt-in Stripe smoke harness checks real success/decline and authentic webhook forwarding; its execution is outstanding. Payment Element/browser coverage arrives in Stage 4. Ordinary CI will require no provider credentials and will never contact Stripe.
+Playwright exercises the dashboard against a separately selected deterministic fake provider, real API and test database. The fake emits signed webhook fixtures through the real verification endpoint. It is allowed only in development/test with explicit simulation enablement. The separate Stage 3 opt-in Stripe smoke harness checks real success/decline and authentic webhook forwarding; its execution is outstanding. Stage 4 browser coverage verifies fake success/decline and recovery; manual hosted Payment Element checks remain deferred to Stage 5 by explicit developer approval. Ordinary CI will require no provider credentials and will never contact Stripe.
 
 Health/configuration tests are established in Stage 1 and expand in every stage. Stage 5 adds the complete scenario matrix, restart/fencing checks, security review, Docker checks, and CI; it does not postpone foundational tests. See [Stage 5](docs/features/stages/05-testing-and-polish.md).
 
@@ -255,3 +258,33 @@ The API now selects `stripe` or the explicitly guarded deterministic `fake` thro
 `POST /api/v1/payments/:id/confirmation-session` and `POST /api/v1/payments/:id/sync` accept exactly `{}`. Sessions create/recover one intent with frozen parameters and expose the client secret only after linkage commits. Sync only retrieves known intents. `POST /api/v1/webhooks/stripe` verifies exact signed bytes, stores a sanitized receipt, retrieves current provider state, and commits payment/audit/receipt completion atomically. All paths use a 30-second database lease with token fencing. Unknown creates retain the same key, six-attempt budget and original 23-hour cutoff; expired/ambiguous operations stop for manual review.
 
 The deterministic verification on 2026-11-19 passes **156 unit/API tests and 62 real-PostgreSQL integration tests** without external provider requests or Stripe credentials. Provider smoke is separately **SKIPPED / DEFERRED** until a configured test account and authentic webhook forwarding are available. The developer explicitly approved Stage 3 closure with this follow-up tracked in Stage 5; actual Stripe behavior is not claimed fully verified. The opt-in `STRIPE_SMOKE_ENABLED=true npm run test:stripe-smoke` harness checks real success/decline and processed authentic receipts. See the [Stage 3 evidence, smoke setup and operator recovery procedure](docs/features/stages/03-stripe-integration.md#verification-evidence--2026-11-19). No frontend payment UI or simulation endpoints were added.
+
+
+## Stage 4 Dashboard Demo
+
+Start Compose (`npm run infra:up`) and the web app (`npm run dev:web`), then open [Payments](http://localhost:3000/payments). If this environment blocks Turbopack worker sockets, use `npm run dev --workspace @simulator/web -- --webpack`. Open the exact browser origin configured by `WEB_ORIGIN`; Next.js displaying its `127.0.0.1` listening address does not change that setting. To use `http://127.0.0.1:3000`, set that exact `WEB_ORIGIN` in the root `.env`, `apps/api/.env` and `apps/web/.env.local`, and set `PAYMENT_RETURN_URL=http://127.0.0.1:3000/payments/return` in the API environment. Recreate the API container with `npm run infra:up` and restart the web process after changing settings. `localhost` and `127.0.0.1` are distinct browser origins; mismatched Host/Origin values intentionally return 403.
+
+1. Create `27.31 EUR`. Inspect the exact amount, current status, provider linkage and newest-first audit timeline. Use the ledger status filter and Next/Previous controls to find payments.
+2. In fake mode, open the confirmation session, choose **Confirm fake decline**, then **Confirm fake success**. The decline is retryable; the provider intent ID stays unchanged. Terminal success closes confirmation. Fake mode has no card fields and never loads Stripe.js.
+3. Run **Run two identical requests** and **Race ten requests** on the ledger. Each starts a fresh $25.00 USD demonstration and reports every HTTP status/payment ID plus PostgreSQL payment/creation-event counts. Unexpected counts/statuses show failed assertions.
+4. On a new pending payment, arm **webhook rollback**, then confirm fake success. Observe webhook HTTP 503, unchanged local financial status and retry timing. Copy the event ID from the delivery report/history, wait until eligible, then **Replay signed event twice**. Both deliveries must return 200, the receipt becomes PROCESSED, and the event has one financial transition. Replay again: delivery count rises; transition count remains one. Replaying an already processed event does not consume a rollback fault.
+5. On a new local payment, arm **provider response timeout**, then open the session. Financial status stays CREATED; the operational result is RETRYABLE/PROVIDER_OUTCOME_UNKNOWN. After retry eligibility, **Recover confirmation session** reuses the frozen provider operation and links the original intent. For a linked payment, use **Synchronize with provider** to recover without creating or reconfirming anything.
+6. If a create response is lost, use **Retry same request**. The form retains its original body/key in memory and locks edits until a definitive response. The replayed 201 is never treated as current status; the details query supplies it.
+
+Faults are payment-scoped, one-shot, expire after 60 seconds and vanish on API restart. Fake provider objects/fixtures are process-local; use a new payment after deliberately restarting that external fake unless a test explicitly reseeds it. Production/disabled backend simulations are unregistered; the web proxy also returns 404 and hides controls. Stripe mode has no fake-confirm endpoint.
+
+For deterministic browser acceptance:
+
+```bash
+docker compose --env-file .env -f infra/compose.test.yaml up -d --wait
+npm run test:integration
+npm run test:e2e
+```
+
+Run these suites **sequentially**: both intentionally use the guarded `_test` database; browser tests use ports 3000/3102. The E2E runner reads the ignored API test environment, migrates that database, starts its own real API and Next.js server, and stops both afterwards. It requires an installed Chromium (`npx playwright install chromium` on a fresh machine). It never uses the development database, real Stripe credentials or invented success responses. The lost-response fixture discards a real committed HTTP response. Traces are disabled to avoid recording session response secrets; responsive screenshots contain only rendered non-sensitive UI. `SIMULATOR_E2E=true` is server-only and reserves the fixed loopback port 3102; normal operation accepts port 3001 only.
+
+Queries/mutations have zero automatic retries and no focus/reconnect refetches. Details poll every two seconds for at most 60 seconds, stopping on terminal status; explicit refresh restarts the window. Mutation invalidation refetches lists/details/history without optimistic financial states. Confirmation sessions bypass both query and mutation caches and remain component-local; Axios errors discard raw configuration/response references. No query persistence, card data storage or new domain tables were added.
+
+In real Stripe mode, Payment Element confirms with the fixed origin’s `/payments/return` and `redirect: if_required`. A short-lived HttpOnly cookie contains only the local payment UUID for return correlation. The return handler ignores URL outcome claims, discards provider query values, clears the cookie and redirects to a clean detail URL for synchronization. Incoming Next.js URL logging is disabled and the return uses `no-referrer`/`no-store`. Stripe-controlled redirect behavior and hosted iframe interaction still require the separately deferred real-provider check; they are not asserted by the fake suite.
+
+See [Stage 4 acceptance evidence](docs/features/stages/04-payment-simulator.md#verification-evidence--2026-11-19) for verified results and the [Stage 5 follow-up](docs/features/stages/05-testing-and-polish.md#deferred-real-provider-browser-verification).

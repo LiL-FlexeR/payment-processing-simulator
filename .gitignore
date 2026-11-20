@@ -10,4 +10,7 @@ node_modules/
 !.env.example
 !**/.env.example
 .impeccable/
+**/test-results/
+**/playwright-report/
+**/.playwright-cli/
 .DS_Store

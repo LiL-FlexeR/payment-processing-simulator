@@ -63,6 +63,9 @@ class SafeExceptionFilter implements ExceptionFilter {
 
 export function configureHttp(app: INestApplication): void {
   const logger = new Logger('Http');
+  const config = app.get(ConfigService).values;
+  const simulationsEnabled =
+    config.nodeEnv !== 'production' && config.simulationEnabled;
   // One local API process; this limiter protects writes, never payment correctness.
   const writeWindows = new Map<string, { start: number; count: number }>();
   app.setGlobalPrefix('api/v1');
@@ -109,6 +112,7 @@ export function configureHttp(app: INestApplication): void {
             'x-request-id',
             'content-type',
             'stripe-signature',
+            'authorization',
           ].includes(name)
         )
           continue;
@@ -151,9 +155,11 @@ export function configureHttp(app: INestApplication): void {
       }
       if (
         request.method === 'POST' &&
-        /^\/api\/v1\/(payments(?:\/[^/]+\/(?:confirmation-session|sync))?|webhooks\/stripe)\/?$/i.test(
+        (/^\/api\/v1\/(payments(?:\/[^/]+\/(?:confirmation-session|sync))?|webhooks\/stripe)\/?$/i.test(
           request.path,
-        )
+        ) ||
+          (simulationsEnabled &&
+            /^\/api\/v1\/dev\/simulations\//i.test(request.path)))
       ) {
         if (!request.is('application/json'))
           throw new ApiError(

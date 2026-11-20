@@ -56,6 +56,11 @@ describe('durable creation replay after API process restart', () => {
   });
 
   it('replays the same 201 bytes and current GET state in a new process', async () => {
+    // This suite can run first after browser tests, which use the same guarded
+    // test database. Never assume a previous suite left an empty database.
+    await pool.query(
+      'TRUNCATE idempotency_records, payment_events, webhook_events, payments RESTART IDENTITY',
+    );
     const key = randomUUID();
     const create = () =>
       fetch(origin + '/api/v1/payments', {

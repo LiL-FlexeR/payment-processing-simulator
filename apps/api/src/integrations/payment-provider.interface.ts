@@ -17,4 +17,10 @@ export interface PaymentProvider {
   verifyEvent(raw: Buffer, signature: string): VerifiedProviderEvent;
   // Used only for fixed, stored test-event replay in Stage 4.
   retrieveTestEvent(id: string): Promise<Buffer>;
+  signTestEvent(raw: Buffer): string;
+  // Absent on real providers; fixed fixture scenarios only.
+  confirmTestIntent?(
+    id: string,
+    scenario: 'success' | 'decline',
+  ): { id: string; raw: Buffer };
 }

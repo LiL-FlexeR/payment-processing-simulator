@@ -29,7 +29,8 @@
     "test": "npm run test --workspace @simulator/api",
     "test:integration": "npm run test:integration --workspace @simulator/api",
     "db:migrate": "npm run db:migrate --workspace @simulator/api",
-    "test:stripe-smoke": "npm run test:stripe-smoke --workspace @simulator/api"
+    "test:stripe-smoke": "npm run test:stripe-smoke --workspace @simulator/api",
+    "test:e2e": "npm run build --workspace @simulator/api && npm run test:e2e --workspace @simulator/web"
   },
   "devDependencies": {
     "@types/node": "24.19.2",

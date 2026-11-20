@@ -179,6 +179,12 @@ export class FakePaymentProvider implements PaymentProvider {
       .digest('hex');
     return `t=${timestamp},v1=${digest}`;
   }
+  signTestEvent(raw: Buffer) {
+    return this.sign(raw);
+  }
+  confirmTestIntent(id: string, scenario: 'success' | 'decline') {
+    return this.confirm(id, scenario);
+  }
   verifyEvent(raw: Buffer, signature: string) {
     try {
       const parts = signature.split(',');

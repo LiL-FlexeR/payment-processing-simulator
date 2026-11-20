@@ -7,7 +7,7 @@ export function localOrigins() {
     );
     const web = new URL(process.env.WEB_ORIGIN ?? 'http://localhost:3000');
     for (const [url, port] of [
-      [api, '3001'],
+      [api, process.env.SIMULATOR_E2E === 'true' ? '3102' : '3001'],
       [web, '3000'],
     ] as const) {
       if (

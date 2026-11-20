@@ -1,6 +1,6 @@
 # Implementation Roadmap
 
-Implement exactly these five stages in order. **Stages 1–3 are complete; Stage 3’s deterministic acceptance is verified and its real Stripe smoke check is explicitly deferred by the developer to Stage 5 until credentials are available. Stages 4–5 are not started.** Documentation completion does not complete an implementation stage. The [architecture contract](../architecture/README.md) is the source of truth; detailed tasks and verification belong in the linked stage documents.
+Implement exactly these five stages in order. **Stages 1–3 are complete; Stage 3’s deterministic acceptance is verified and its real Stripe smoke check is explicitly deferred by the developer to Stage 5 until credentials are available. Stage 4 is complete with deterministic acceptance verified and manual real Payment Element verification explicitly deferred to Stage 5 by the developer. Stage 5 is not started.** Documentation completion does not complete an implementation stage. The [architecture contract](../architecture/README.md) is the source of truth; detailed tasks and verification belong in the linked stage documents.
 
 Read [AGENTS.md](../../AGENTS.md) and the [supplied design reference](../design/DESIGN.md) before development. Use all four files in `docs/design/` for frontend setup, dashboard implementation and visual verification; the [README context guide](../../README.md#design-and-development-context) explains their roles. Stages 1, 4 and 5 explicitly cover design integration and verification without changing the five-stage scope.
 
@@ -50,7 +50,7 @@ Details and verification evidence: [Stage 3 instructions](stages/03-stripe-integ
 
 ## Stage 4 — Payment Simulator
 
-- [ ] Not started
+- [x] Complete — deterministic acceptance verified on 2026-11-19; real Payment Element verification **SKIPPED / DEFERRED** to Stage 5 by the developer’s explicit decision, pending credentials
 
 **Objective:** expose the payment workflows and failure evidence in a compact dashboard. **Scope:** creation and confirmation UI, list/details/timeline, status/error presentation, development scenario orchestration and guarded proxies. **Dependencies:** Stage 3 APIs and provider fake verified.
 

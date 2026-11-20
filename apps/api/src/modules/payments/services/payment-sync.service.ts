@@ -1,4 +1,8 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import {
+  PAYMENT_OPERATION_HOOKS,
+  type PaymentOperationHooks,
+} from '../../../integrations/payment-operation-hooks.js';
 import type { Prisma } from '../../../generated/prisma/client.js';
 import { PAYMENT_PROVIDER } from '../../../integrations/payment-provider.token.js';
 import type { PaymentProvider } from '../../../integrations/payment-provider.interface.js';
@@ -39,6 +43,9 @@ export class PaymentSyncService {
     @Inject(PAYMENT_PROVIDER) private readonly provider: PaymentProvider,
     private readonly leases: PaymentLeaseService,
     private readonly statuses: PaymentStatusService,
+    @Optional()
+    @Inject(PAYMENT_OPERATION_HOOKS)
+    private readonly faults?: PaymentOperationHooks,
   ) {}
 
   async confirmationSession(id: string) {
@@ -93,6 +100,12 @@ export class PaymentSyncService {
         : await this.provider.retrieveIntent(
             event?.providerObjectId ?? claim.payment.stripePaymentIntentId!,
           );
+      if (this.faults?.consume(id, 'provider_response_timeout'))
+        throw new ProviderFailure(
+          'transient',
+          'PROVIDER_OUTCOME_UNKNOWN',
+          observation.requestId,
+        );
     } catch (error) {
       const failure =
         error instanceof ProviderFailure
@@ -201,6 +214,8 @@ export class PaymentSyncService {
         });
       }
       await this.leases.release(tx, claim);
+      if (event && this.faults?.consume(id, 'webhook_before_commit'))
+        throw new Error('Injected development transaction rollback.');
       return { review: false as const, payment: updated };
     }).catch(async (error) => {
       if (isProviderLinkConflict(error)) {

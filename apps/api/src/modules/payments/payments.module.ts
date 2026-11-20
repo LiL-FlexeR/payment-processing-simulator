@@ -17,6 +17,6 @@ import { ConfigModule } from '../../shared/config/config.module.js';
     PaymentLeaseService,
     PaymentSyncService,
   ],
-  exports: [PaymentStatusService, PaymentSyncService],
+  exports: [PaymentStatusService, PaymentSyncService, PaymentLeaseService],
 })
 export class PaymentsModule {}

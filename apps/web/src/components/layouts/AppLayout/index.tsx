@@ -2,7 +2,13 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
-export function AppLayout({ children }: { children: ReactNode }) {
+export function AppLayout({
+  children,
+  provider,
+}: {
+  children: ReactNode;
+  provider: 'fake' | 'stripe';
+}) {
   return (
     <div className="mx-auto max-w-[var(--page-max-width)] px-[var(--spacing-24)] sm:px-[var(--spacing-32)]">
       <a
@@ -17,18 +23,31 @@ export function AppLayout({ children }: { children: ReactNode }) {
           className="text-body text-foreground no-underline"
           prefetch={false}
         >
-          Payment Processing Simulator
+          Payment Simulator
         </Link>
-        <Badge variant="accent">Test mode only</Badge>
+        <div className="flex flex-wrap items-center gap-4">
+          <nav aria-label="Main navigation">
+            <Link href="/payments" prefetch={false}>
+              Payments
+            </Link>
+          </nav>
+          <Badge variant="accent">
+            {provider === 'fake'
+              ? 'Fake provider · Test mode'
+              : 'Stripe · Test mode'}
+          </Badge>
+        </div>
       </header>
       <main
         id="main"
-        className="max-w-[880px] py-[var(--spacing-48)] sm:py-[var(--spacing-64)]"
+        tabIndex={-1}
+        className="py-[var(--spacing-40)] sm:py-[var(--spacing-48)]"
       >
         {children}
       </main>
       <footer className="border-t border-border py-[var(--spacing-24)] text-body-sm text-muted-foreground">
-        Local development · No payment data is collected
+        Local development · Test payments only · No raw card data reaches this
+        application
       </footer>
     </div>
   );

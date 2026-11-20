@@ -2,7 +2,7 @@
 
 ## Conventions and Shared Schemas
 
-Backend base path: `/api/v1`. Local backend origin: `http://localhost:3001`; the browser uses the Next.js same-origin proxy on port 3000. Stages 1–3 implement health, payment create/list/detail/events, confirmation sessions, explicit sync and signed snapshot webhooks, with local Swagger at `/api/docs`. Simulation routes remain **future Stage 4 contracts**. Stage 3 is complete with deterministic checks passing; the developer explicitly deferred real Stripe smoke execution to Stage 5 until credentials are available. Actual Stripe behavior remains unverified. The frontend proxy still exposes only health until Stage 4. See the [Stage 2 verification evidence](../features/stages/02-payment-core.md#verification-evidence--2026-11-19). Use JSON with camelCase fields, UUID payment IDs, uppercase local status/currency, UTC ISO-8601 timestamps, and decimal strings for audit bigint IDs. Reject unknown body fields and duplicate singleton headers. Do not coerce monetary strings or floats into integers.
+Backend base path: `/api/v1`. Local backend origin: `http://localhost:3001`; the browser uses the Next.js same-origin proxy on port 3000. Stages 1–4 implement health, payment create/list/detail/events, confirmation sessions, explicit sync and signed snapshot webhooks, with local Swagger at `/api/docs`. The four guarded Stage 4 simulation routes are implemented. Stage 3 is complete with deterministic checks passing; the developer explicitly deferred real Stripe smoke execution to Stage 5 until credentials are available. Actual Stripe behavior remains unverified. The frontend proxy exposes allowlisted health/payment/session/sync/event routes and separate guarded development forwarding; it never exposes arbitrary webhook posting. See the [Stage 2 verification evidence](../features/stages/02-payment-core.md#verification-evidence--2026-11-19). Use JSON with camelCase fields, UUID payment IDs, uppercase local status/currency, UTC ISO-8601 timestamps, and decimal strings for audit bigint IDs. Reject unknown body fields and duplicate singleton headers. Do not coerce monetary strings or floats into integers.
 
 Normal JSON requests use `Content-Type: application/json` and optional `X-Request-Id` (UUID; otherwise generate one). Responses echo a safe generated/validated `X-Request-Id`, use `Cache-Control: no-store`, and never include a stack trace. No authentication is required for the local demo payment endpoints; the loopback-only boundary in the [system overview](system-overview.md) is part of this contract. Browser-facing proxy requests must satisfy its Host/Origin policy.
 
@@ -66,6 +66,7 @@ Exactly these fields are accepted. Payment amounts and currency are immutable af
 | `INVALID_WEBHOOK` | 400 | Invalid signature, envelope, mode or event identity |
 | `FORBIDDEN` | 403 | Development token/origin checks failed |
 | `PAYMENT_NOT_FOUND`, `EVENT_NOT_FOUND` | 404 | Resource missing |
+| `EVENT_UNAVAILABLE` | 409 | Original immutable test event unavailable, including a fake fixture lost on process restart |
 | `IDEMPOTENCY_KEY_REUSED` | 409 | Same application key, different canonical payload |
 | `OPERATION_IN_PROGRESS` | 409 | Payment lease busy; retry later |
 | `PAYMENT_NOT_CONFIRMABLE` | 409 | Terminal status or intent currently processing |

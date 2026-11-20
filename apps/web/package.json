@@ -6,12 +6,18 @@
     "dev": "next dev --hostname 127.0.0.1 --port 3000",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 3000",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "test:e2e": "node test/run-e2e.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
+    "@stripe/react-stripe-js": "7.1.0",
+    "@stripe/stripe-js": "10.3.0",
+    "@tanstack/react-query": "5.108.1",
+    "axios": "1.21.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "lucide-react": "0.577.0",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
@@ -19,6 +25,7 @@
     "tailwind-merge": "3.7.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.1",
     "@tailwindcss/postcss": "4.3.5",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",

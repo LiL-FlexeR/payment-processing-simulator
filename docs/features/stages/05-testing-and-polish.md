@@ -114,3 +114,14 @@ Real payments, production deployment, complex authentication, refunds, subscript
 ## Dependencies
 
 Depends on all four preceding verified stages. Completes the [five-stage roadmap](../ROADMAP.md) without adding a sixth implementation stage. Optional skills remain developer-controlled aids.
+
+
+## Deferred Real Provider Browser Verification
+
+On 2026-11-19 the developer explicitly approved moving Stage 4’s manual hosted Payment Element verification to this stage because local Stripe test credentials are unavailable. Stage 4’s deterministic browser/API/PostgreSQL acceptance is verified; no real Stripe behavior is claimed passed. This adds to the existing Stage 3 provider-smoke follow-up and does not start Stage 5 implementation.
+
+- [ ] Configure the real Stripe test environment and authentic snapshot webhook forwarding documented in Stage 3.
+- [ ] In the actual Payment Element, confirm a test success and a declined attempt followed by success on the same intent; inspect the synchronized local status/history.
+- [ ] Verify hosted authentication/return navigation, clean detail redirects, HttpOnly local-ID correlation, no URL logging/referrer leakage, and actual Stripe redirect query handling. The application does not add a client secret to its return URL, but Stripe-controlled redirects may append provider parameters; inspect the complete real flow before claiming the strict URL secrecy requirement verified.
+- [ ] Verify test-mode styles/focus inside the hosted iframe and confirm that success/cancellation never reopen confirmation.
+- [ ] Record dated results separately from the credential-free Playwright suite; run the Stage 3 opt-in provider smoke as well.
